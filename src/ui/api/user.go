@@ -19,11 +19,12 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strconv"
 	"strings"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/vmware/harbor/src/common/api"
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
 	"github.com/vmware/harbor/src/ui/config"
@@ -32,8 +33,8 @@ import (
 // UserAPI handles request to /api/users/{}
 type UserAPI struct {
 	api.BaseAPI
-	currentUserID    int
-	userID           int
+	currentUserID    bson.ObjectId
+	userID           bson.ObjectId
 	SelfRegistration bool
 	IsAdmin          bool
 	AuthMode         string
@@ -59,17 +60,18 @@ func (ua *UserAPI) Prepare() {
 		}
 	}
 
-	ua.currentUserID = ua.ValidateUser()
+	ua.currentUserID = ua.ValidateUser().UserID
 	id := ua.Ctx.Input.Param(":id")
 	if id == "current" {
 		ua.userID = ua.currentUserID
 	} else if len(id) > 0 {
 		var err error
-		ua.userID, err = strconv.Atoi(id)
-		if err != nil {
-			log.Errorf("Invalid user id, error: %v", err)
-			ua.CustomAbort(http.StatusBadRequest, "Invalid user Id")
-		}
+		ua.userID = bson.ObjectIdHex(id)
+		// ua.userID, err = strconv.Atoi(id)
+		// if err != nil {
+		// 	log.Errorf("Invalid user id, error: %v", err)
+		// 	ua.CustomAbort(http.StatusBadRequest, "Invalid user Id")
+		// }
 		userQuery := models.User{UserID: ua.userID}
 		u, err := dao.GetUser(userQuery)
 		if err != nil {
@@ -77,7 +79,7 @@ func (ua *UserAPI) Prepare() {
 			ua.CustomAbort(http.StatusInternalServerError, "Internal error.")
 		}
 		if u == nil {
-			log.Errorf("User with Id: %d does not exist", ua.userID)
+			log.Errorf("User with Id: %v does not exist", ua.userID)
 			ua.CustomAbort(http.StatusNotFound, "")
 		}
 	}
@@ -93,9 +95,9 @@ func (ua *UserAPI) Prepare() {
 
 // Get ...
 func (ua *UserAPI) Get() {
-	if ua.userID == 0 { //list users
+	if ua.userID == "" { //list users
 		if !ua.IsAdmin {
-			log.Errorf("Current user, id: %d does not have admin role, can not list users", ua.currentUserID)
+			log.Errorf("Current user, id: %v does not have admin role, can not list users", ua.currentUserID)
 			ua.RenderError(http.StatusForbidden, "User does not have admin role")
 			return
 		}
@@ -121,7 +123,7 @@ func (ua *UserAPI) Get() {
 		}
 		ua.Data["json"] = u
 	} else {
-		log.Errorf("Current user, id: %d does not have admin role, can not view other user's detail", ua.currentUserID)
+		log.Errorf("Current user, id: %v does not have admin role, can not view other user's detail", ua.currentUserID)
 		ua.RenderError(http.StatusForbidden, "User does not have admin role")
 		return
 	}
@@ -130,7 +132,7 @@ func (ua *UserAPI) Get() {
 
 // Put ...
 func (ua *UserAPI) Put() {
-	ldapAdminUser := (ua.AuthMode == "ldap_auth" && ua.userID == 1 && ua.userID == ua.currentUserID)
+	ldapAdminUser := (ua.AuthMode == "ldap_auth" && ua.userID == "1" && ua.userID == ua.currentUserID)
 
 	if !(ua.AuthMode == "db_auth" || ldapAdminUser) {
 		ua.CustomAbort(http.StatusForbidden, "")
@@ -156,7 +158,7 @@ func (ua *UserAPI) Put() {
 		ua.CustomAbort(http.StatusInternalServerError, "Internal error.")
 	}
 	if u == nil {
-		log.Errorf("User with Id: %d does not exist", ua.userID)
+		log.Errorf("User with Id: %v does not exist", ua.userID)
 		ua.CustomAbort(http.StatusNotFound, "")
 	}
 	if u.Email != user.Email {
@@ -217,13 +219,14 @@ func (ua *UserAPI) Post() {
 		ua.RenderError(http.StatusConflict, "email has already been used!")
 		return
 	}
-	userID, err := dao.Register(user)
+	registeredUser, err := dao.Register(user)
 	if err != nil {
 		log.Errorf("Error occurred in Register: %v", err)
 		ua.CustomAbort(http.StatusInternalServerError, "Internal error.")
 	}
 
-	ua.Redirect(http.StatusCreated, strconv.FormatInt(userID, 10))
+	ua.Redirect(http.StatusCreated, registeredUser.UserID.String())
+	// ua.Redirect(http.StatusCreated, strconv.FormatInt(userID, 10))
 }
 
 // Delete ...
@@ -253,7 +256,7 @@ func (ua *UserAPI) Delete() {
 
 // ChangePassword handles PUT to /api/users/{}/password
 func (ua *UserAPI) ChangePassword() {
-	ldapAdminUser := (ua.AuthMode == "ldap_auth" && ua.userID == 1 && ua.userID == ua.currentUserID)
+	ldapAdminUser := (ua.AuthMode == "ldap_auth" && ua.userID == "1" && ua.userID == ua.currentUserID)
 
 	if !(ua.AuthMode == "db_auth" || ldapAdminUser) {
 		ua.CustomAbort(http.StatusForbidden, "")
@@ -304,6 +307,7 @@ func (ua *UserAPI) ToggleUserAdminRole() {
 	}
 	userQuery := models.User{UserID: ua.userID}
 	ua.DecodeJSONReq(&userQuery)
+
 	if err := dao.ToggleUserAdminRole(userQuery.UserID, userQuery.HasAdminRole); err != nil {
 		log.Errorf("Error occurred in ToggleUserAdminRole: %v", err)
 		ua.CustomAbort(http.StatusInternalServerError, "Internal error.")

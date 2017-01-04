@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // AdminOptionController handles requests to /admin_option
@@ -12,7 +13,7 @@ type AdminOptionController struct {
 
 // Get renders the admin options  page
 func (aoc *AdminOptionController) Get() {
-	sessionUserID, ok := aoc.GetSession("userId").(int)
+	sessionUserID, ok := aoc.GetSession("userId").(bson.ObjectId)
 	if ok {
 		isAdmin, err := dao.IsAdminRole(sessionUserID)
 		if err != nil {

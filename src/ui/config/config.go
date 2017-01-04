@@ -65,6 +65,8 @@ func (up *uiParser) Parse(raw map[string]string, config map[string]interface{}) 
 		}
 	}
 	config["token_exp"] = tokenExpiration
+	config["app_check"] = raw["APP_CHECK"] != "off"
+	config["app_only"] = raw["APP_ONLY"] != "off"
 	config["admin_password"] = raw["HARBOR_ADMIN_PASSWORD"]
 	config["ext_reg_url"] = raw["EXT_REG_URL"]
 	config["ui_secret"] = raw["UI_SECRET"]
@@ -83,7 +85,7 @@ func (up *uiParser) Parse(raw map[string]string, config map[string]interface{}) 
 var uiConfig *commonConfig.Config
 
 func init() {
-	uiKeys := []string{"AUTH_MODE", "LDAP_URL", "LDAP_BASE_DN", "LDAP_SEARCH_DN", "LDAP_SEARCH_PWD", "LDAP_UID", "LDAP_FILTER", "LDAP_SCOPE", "TOKEN_EXPIRATION", "HARBOR_ADMIN_PASSWORD", "EXT_REG_URL", "UI_SECRET", "SECRET_KEY", "SELF_REGISTRATION", "PROJECT_CREATION_RESTRICTION", "REGISTRY_URL", "JOB_SERVICE_URL"}
+	uiKeys := []string{"AUTH_MODE", "LDAP_URL", "LDAP_BASE_DN", "LDAP_SEARCH_DN", "LDAP_SEARCH_PWD", "LDAP_UID", "LDAP_FILTER", "LDAP_SCOPE", "TOKEN_EXPIRATION", "HARBOR_ADMIN_PASSWORD", "EXT_REG_URL", "UI_SECRET", "SECRET_KEY", "SELF_REGISTRATION", "PROJECT_CREATION_RESTRICTION", "REGISTRY_URL", "JOB_SERVICE_URL", "APP_ONLY", "APP_CHECK"}
 	uiConfig = &commonConfig.Config{
 		Config: make(map[string]interface{}),
 		Loader: &commonConfig.EnvConfigLoader{Keys: uiKeys},
@@ -102,6 +104,16 @@ func Reload() error {
 // AuthMode ...
 func AuthMode() string {
 	return uiConfig.Config["auth_mode"].(string)
+}
+
+// AppOnly ...
+func AppOnly() bool {
+	return uiConfig.Config["app_only"].(bool)
+}
+
+// AppCheck ...
+func AppCheck() bool {
+	return uiConfig.Config["app_check"].(bool)
 }
 
 // LDAP returns the setting of ldap server

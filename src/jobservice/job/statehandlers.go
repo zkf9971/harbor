@@ -18,7 +18,9 @@ package job
 import (
 	"time"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
 )
@@ -36,7 +38,7 @@ type StateHandler interface {
 // StatusUpdater implements the StateHandler interface which updates the status of a job in DB when the job enters
 // a status.
 type StatusUpdater struct {
-	JobID int64
+	JobID bson.ObjectId
 	State string
 }
 
@@ -62,14 +64,14 @@ func (su StatusUpdater) Exit() error {
 // Retry handles a special "retrying" in which case it will update the status in DB and reschedule the job
 // via scheduler
 type Retry struct {
-	JobID int64
+	JobID bson.ObjectId
 }
 
 // Enter ...
 func (jr Retry) Enter() (string, error) {
 	err := dao.UpdateRepJobStatus(jr.JobID, models.JobRetrying)
 	if err != nil {
-		log.Errorf("Failed to update state of job :%d to Retrying, error: %v", jr.JobID, err)
+		log.Errorf("Failed to update state of job :%v to Retrying, error: %v", jr.JobID, err)
 	}
 	go Reschedule(jr.JobID)
 	return "", err

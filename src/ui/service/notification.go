@@ -20,7 +20,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils"
 	"github.com/vmware/harbor/src/common/utils/log"

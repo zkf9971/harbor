@@ -20,12 +20,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"github.com/vmware/harbor/src/common/api"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
-	"github.com/vmware/harbor/src/ui/service/cache"
 	"github.com/vmware/harbor/src/common/utils"
 	"github.com/vmware/harbor/src/common/utils/log"
-    "github.com/vmware/harbor/src/common/api"
+	"github.com/vmware/harbor/src/ui/service/cache"
 )
 
 // SearchAPI handles requesst to /api/search
@@ -42,14 +42,14 @@ type searchResult struct {
 func (s *SearchAPI) Get() {
 	userID, _, ok := s.GetUserIDForRequest()
 	if !ok {
-		userID = dao.NonExistUserID
+		userID = "" //dao.NonExistUserID
 	}
 
 	keyword := s.GetString("q")
 
 	isSysAdmin, err := dao.IsAdminRole(userID)
 	if err != nil {
-		log.Errorf("failed to check whether the user %d is system admin: %v", userID, err)
+		log.Errorf("failed to check whether the user %v is system admin: %v", userID, err)
 		s.CustomAbort(http.StatusInternalServerError, "internal error")
 	}
 

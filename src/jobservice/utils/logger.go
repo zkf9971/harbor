@@ -18,15 +18,17 @@ package utils
 import (
 	"fmt"
 
-	"github.com/vmware/harbor/src/jobservice/config"
-	"github.com/vmware/harbor/src/common/utils/log"
+	"gopkg.in/mgo.v2/bson"
+
 	"os"
 	"path/filepath"
-	"strconv"
+
+	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/jobservice/config"
 )
 
 // NewLogger create a logger for a speicified job
-func NewLogger(jobID int64) *log.Logger {
+func NewLogger(jobID bson.ObjectId) *log.Logger {
 	logFile := GetJobLogPath(jobID)
 	d := filepath.Dir(logFile)
 	if _, err := os.Stat(d); os.IsNotExist(err) {
@@ -37,30 +39,32 @@ func NewLogger(jobID int64) *log.Logger {
 	}
 	f, err := os.OpenFile(logFile, os.O_RDWR|os.O_APPEND|os.O_CREATE, 0660)
 	if err != nil {
-		log.Errorf("Failed to open log file %s, the log of job %d will be printed to standard output, the error: %v", logFile, jobID, err)
+		log.Errorf("Failed to open log file %s, the log of job %v will be printed to standard output, the error: %v", logFile, jobID, err)
 		f = os.Stdout
 	}
 	return log.New(f, log.NewTextFormatter(), log.InfoLevel)
 }
 
 // GetJobLogPath returns the absolute path in which the job log file is located.
-func GetJobLogPath(jobID int64) string {
-	f := fmt.Sprintf("job_%d.log", jobID)
-	k := jobID / 1000
+func GetJobLogPath(jobID bson.ObjectId) string {
+	f := fmt.Sprintf("job_%v.log", jobID)
 	p := ""
-	var d string
-	for k > 0 {
-		d = strconv.FormatInt(k%1000, 10)
-		k = k / 1000
-		if k > 0 && len(d) == 1 {
-			d = "00" + d
-		}
-		if k > 0 && len(d) == 2 {
-			d = "0" + d
-		}
+	// k := jobID / 1000
+	// p := ""
+	// var d string
+	// for k > 0 {
+	// 	d = strconv.FormatInt(k%1000, 10)
+	// 	k = k / 1000
+	// 	if k > 0 && len(d) == 1 {
+	// 		d = "00" + d
+	// 	}
+	// 	if k > 0 && len(d) == 2 {
+	// 		d = "0" + d
+	// 	}
 
-		p = filepath.Join(d, p)
-	}
-	p = filepath.Join(config.LogDir(), p, f)
+	// 	p = filepath.Join(d, p)
+	// }
+	// p = filepath.Join(config.LogDir(), p, f)
+	p = filepath.Join(config.LogDir(), jobID.String(), f)
 	return p
 }

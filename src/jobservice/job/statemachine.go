@@ -19,13 +19,15 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/vmware/harbor/src/common/dao"
-	"github.com/vmware/harbor/src/jobservice/config"
-	"github.com/vmware/harbor/src/jobservice/replication"
-	"github.com/vmware/harbor/src/jobservice/utils"
+	"gopkg.in/mgo.v2/bson"
+
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	uti "github.com/vmware/harbor/src/common/utils"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/jobservice/config"
+	"github.com/vmware/harbor/src/jobservice/replication"
+	"github.com/vmware/harbor/src/jobservice/utils"
 )
 
 // RepJobParm wraps the parm of a job
@@ -43,7 +45,7 @@ type RepJobParm struct {
 
 // SM is the state machine to handle job, it handles one job at a time.
 type SM struct {
-	JobID         int64
+	JobID         bson.ObjectId
 	CurrentState  string
 	PreviousState string
 	//The states that don't have to exist in transition map, such as "Error", "Canceled"
@@ -145,7 +147,7 @@ func (sm *SM) RemoveTransition(from string, to string) {
 
 // Stop will set the desired state as "stopped" such that when next tranisition happen the state machine will stop handling the current job
 // and the worker can release itself to the workerpool.
-func (sm *SM) Stop(id int64) {
+func (sm *SM) Stop(id bson.ObjectId) {
 	log.Debugf("Trying to stop the job: %d", id)
 	sm.lock.Lock()
 	defer sm.lock.Unlock()
@@ -184,7 +186,7 @@ func (sm *SM) Init() {
 }
 
 // Reset resets the state machine so it will start handling another job.
-func (sm *SM) Reset(jid int64) error {
+func (sm *SM) Reset(jid bson.ObjectId) error {
 	//To ensure the new jobID is visible to the thread to stop the SM
 	sm.lock.Lock()
 	sm.JobID = jid

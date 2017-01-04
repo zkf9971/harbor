@@ -20,21 +20,23 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/vmware/harbor/src/common/api"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
-    "github.com/vmware/harbor/src/common/api"
 )
 
 //LogAPI handles request api/logs
 type LogAPI struct {
 	api.BaseAPI
-	userID int
+	userID bson.ObjectId
 }
 
 //Prepare validates the URL and the user
 func (l *LogAPI) Prepare() {
-	l.userID = l.ValidateUser()
+	l.userID = l.ValidateUser().UserID
 }
 
 //Get returns the recent logs according to parameters

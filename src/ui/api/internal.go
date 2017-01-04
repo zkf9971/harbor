@@ -18,9 +18,11 @@ package api
 import (
 	"net/http"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/vmware/harbor/src/common/api"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/utils/log"
-    "github.com/vmware/harbor/src/common/api"
 )
 
 // InternalAPI handles request of harbor admin...
@@ -30,8 +32,8 @@ type InternalAPI struct {
 
 // Prepare validates the URL and parms
 func (ia *InternalAPI) Prepare() {
-	var currentUserID int
-	currentUserID = ia.ValidateUser()
+	var currentUserID bson.ObjectId
+	currentUserID = ia.ValidateUser().UserID
 	isAdmin, err := dao.IsAdminRole(currentUserID)
 	if err != nil {
 		log.Errorf("Error occurred in IsAdminRole:%v", err)

@@ -21,9 +21,11 @@ import (
 	"net/http"
 	"strconv"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/astaxie/beego/validation"
 	"github.com/vmware/harbor/src/common/config"
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
 	"github.com/vmware/harbor/src/ui/auth"
@@ -85,29 +87,31 @@ func (b *BaseAPI) DecodeJSONReqAndValidate(v interface{}) {
 }
 
 // ValidateUser checks if the request triggered by a valid user
-func (b *BaseAPI) ValidateUser() int {
+func (b *BaseAPI) ValidateUser() models.User {
 	userID, needsCheck, ok := b.GetUserIDForRequest()
 	if !ok {
 		log.Warning("No user id in session, canceling request")
 		b.CustomAbort(http.StatusUnauthorized, "")
 	}
+	var user *models.User
+	var err error
 	if needsCheck {
-		u, err := dao.GetUser(models.User{UserID: userID})
+		user, err = dao.GetUser(models.User{UserID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			b.CustomAbort(http.StatusInternalServerError, "Internal error.")
 		}
-		if u == nil {
-			log.Warningf("User was deleted already, user id: %d, canceling request.", userID)
+		if user == nil {
+			log.Warningf("User was deleted already, user id: %v, canceling request.", userID)
 			b.CustomAbort(http.StatusUnauthorized, "")
 		}
 	}
-	return userID
+	return *user
 }
 
 // GetUserIDForRequest tries to get user ID from basic auth header and session.
 // It returns the user ID, whether need further verification(when the id is from session) and if the action is successful
-func (b *BaseAPI) GetUserIDForRequest() (int, bool, bool) {
+func (b *BaseAPI) GetUserIDForRequest() (bson.ObjectId, bool, bool) {
 	username, password, ok := b.Ctx.Request.BasicAuth()
 	if ok {
 		log.Infof("Requst with Basic Authentication header, username: %s", username)
@@ -124,13 +128,13 @@ func (b *BaseAPI) GetUserIDForRequest() (int, bool, bool) {
 			return user.UserID, false, true
 		}
 	}
-	sessionUserID, ok := b.GetSession("userId").(int)
+	sessionUserID, ok := b.GetSession("userId").(bson.ObjectId)
 	if ok {
 		// The ID is from session
 		return sessionUserID, true, true
 	}
 	log.Debug("No valid user id in session.")
-	return 0, false, false
+	return "", false, false
 }
 
 // Redirect does redirection to resource URI with http header status code.
@@ -142,16 +146,17 @@ func (b *BaseAPI) Redirect(statusCode int, resouceID string) {
 }
 
 // GetIDFromURL checks the ID in request URL
-func (b *BaseAPI) GetIDFromURL() int64 {
+func (b *BaseAPI) GetIDFromURL() bson.ObjectId {
 	idStr := b.Ctx.Input.Param(":id")
 	if len(idStr) == 0 {
 		b.CustomAbort(http.StatusBadRequest, "invalid ID in URL")
 	}
 
-	id, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil || id <= 0 {
-		b.CustomAbort(http.StatusBadRequest, "invalid ID in URL")
-	}
+	id := bson.ObjectIdHex(idStr)
+	// id, err := strconv.ParseInt(idStr, 10, 64)
+	// if err != nil || id <= 0 {
+	// 	b.CustomAbort(http.StatusBadRequest, "invalid ID in URL")
+	// }
 
 	return id
 }

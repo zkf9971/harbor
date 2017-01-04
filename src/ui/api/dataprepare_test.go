@@ -18,7 +18,7 @@ package api
 import (
 	"os"
 
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 )
 

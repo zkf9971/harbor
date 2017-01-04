@@ -16,9 +16,9 @@
 package db
 
 import (
-	"github.com/vmware/harbor/src/ui/auth"
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
+	"github.com/vmware/harbor/src/ui/auth"
 )
 
 // Auth implements Authenticator interface to authenticate user against DB.

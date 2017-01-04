@@ -18,9 +18,11 @@ package api
 import (
 	"net/http"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/vmware/harbor/src/common/api"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/utils/log"
-    "github.com/vmware/harbor/src/common/api"
 )
 
 const (
@@ -41,12 +43,12 @@ const (
 // StatisticAPI handles request to /api/statistics/
 type StatisticAPI struct {
 	api.BaseAPI
-	userID int
+	userID bson.ObjectId
 }
 
 //Prepare validates the URL and the user
 func (s *StatisticAPI) Prepare() {
-	s.userID = s.ValidateUser()
+	s.userID = s.ValidateUser().UserID
 }
 
 // Get total projects and repos of the user
@@ -92,14 +94,14 @@ func (s *StatisticAPI) Get() {
 	} else {
 		n, err := dao.GetTotalOfUserRelevantProjects(s.userID, "")
 		if err != nil {
-			log.Errorf("failed to get total of projects for user %d: %v", s.userID, err)
+			log.Errorf("failed to get total of projects for user %v: %v", s.userID, err)
 			s.CustomAbort(http.StatusInternalServerError, "")
 		}
 		statistic[MPC] = n
 
 		n, err = dao.GetTotalOfUserRelevantRepositories(s.userID, "")
 		if err != nil {
-			log.Errorf("failed to get total of repositories for user %d: %v", s.userID, err)
+			log.Errorf("failed to get total of repositories for user %v: %v", s.userID, err)
 			s.CustomAbort(http.StatusInternalServerError, "")
 		}
 		statistic[MRC] = n

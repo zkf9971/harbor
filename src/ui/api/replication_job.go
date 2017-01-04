@@ -23,16 +23,18 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/vmware/harbor/src/common/api"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
-    "github.com/vmware/harbor/src/common/api"
 )
 
 // RepJobAPI handles request to /api/replicationJobs /api/replicationJobs/:id/log
 type RepJobAPI struct {
 	api.BaseAPI
-	jobID int64
+	jobID bson.ObjectId
 }
 
 // Prepare validates that whether user has system admin role
@@ -40,7 +42,7 @@ func (ra *RepJobAPI) Prepare() {
 	uid := ra.ValidateUser()
 	isAdmin, err := dao.IsAdminRole(uid)
 	if err != nil {
-		log.Errorf("Failed to Check if the user is admin, error: %v, uid: %d", err, uid)
+		log.Errorf("Failed to Check if the user is admin, error: %v, uid: %v", err, uid)
 	}
 	if !isAdmin {
 		ra.CustomAbort(http.StatusForbidden, "")
@@ -48,10 +50,11 @@ func (ra *RepJobAPI) Prepare() {
 
 	idStr := ra.Ctx.Input.Param(":id")
 	if len(idStr) != 0 {
-		id, err := strconv.ParseInt(idStr, 10, 64)
-		if err != nil {
-			ra.CustomAbort(http.StatusBadRequest, "ID is invalid")
-		}
+		id := bson.ObjectIdHex(idStr)
+		// id, err := strconv.ParseInt(idStr, 10, 64)
+		// if err != nil {
+		// 	ra.CustomAbort(http.StatusBadRequest, "ID is invalid")
+		// }
 		ra.jobID = id
 	}
 
@@ -60,19 +63,20 @@ func (ra *RepJobAPI) Prepare() {
 // List filters jobs according to the parameters
 func (ra *RepJobAPI) List() {
 
-	policyID, err := ra.GetInt64("policy_id")
-	if err != nil || policyID <= 0 {
-		ra.CustomAbort(http.StatusBadRequest, "invalid policy_id")
-	}
+	policyID := bson.ObjectIdHex(ra.GetString("policy_id"))
+	// policyID, err := ra.GetInt64("policy_id")
+	// if err != nil || policyID <= 0 {
+	// 	ra.CustomAbort(http.StatusBadRequest, "invalid policy_id")
+	// }
 
 	policy, err := dao.GetRepPolicy(policyID)
 	if err != nil {
-		log.Errorf("failed to get policy %d: %v", policyID, err)
+		log.Errorf("failed to get policy %v: %v", policyID, err)
 		ra.CustomAbort(http.StatusInternalServerError, "")
 	}
 
 	if policy == nil {
-		ra.CustomAbort(http.StatusNotFound, fmt.Sprintf("policy %d not found", policyID))
+		ra.CustomAbort(http.StatusNotFound, fmt.Sprintf("policy %v not found", policyID))
 	}
 
 	repository := ra.GetString("repository")
@@ -105,7 +109,7 @@ func (ra *RepJobAPI) List() {
 	jobs, total, err := dao.FilterRepJobs(policyID, repository, status,
 		startTime, endTime, pageSize, pageSize*(page-1))
 	if err != nil {
-		log.Errorf("failed to filter jobs according policy ID %d, repository %s, status %s, start time %v, end time %v: %v",
+		log.Errorf("failed to filter jobs according policy ID %v, repository %s, status %s, start time %v, end time %v: %v",
 			policyID, repository, status, startTime, endTime, err)
 		ra.CustomAbort(http.StatusInternalServerError, "")
 	}
@@ -118,18 +122,18 @@ func (ra *RepJobAPI) List() {
 
 // Delete ...
 func (ra *RepJobAPI) Delete() {
-	if ra.jobID == 0 {
+	if ra.jobID == "" {
 		ra.CustomAbort(http.StatusBadRequest, "id is nil")
 	}
 
 	job, err := dao.GetRepJob(ra.jobID)
 	if err != nil {
-		log.Errorf("failed to get job %d: %v", ra.jobID, err)
+		log.Errorf("failed to get job %v: %v", ra.jobID, err)
 		ra.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
 	if job == nil {
-		ra.CustomAbort(http.StatusNotFound, fmt.Sprintf("job %d not found", ra.jobID))
+		ra.CustomAbort(http.StatusNotFound, fmt.Sprintf("job %v not found", ra.jobID))
 	}
 
 	if job.Status == models.JobPending || job.Status == models.JobRunning {
@@ -137,18 +141,19 @@ func (ra *RepJobAPI) Delete() {
 	}
 
 	if err = dao.DeleteRepJob(ra.jobID); err != nil {
-		log.Errorf("failed to deleted job %d: %v", ra.jobID, err)
+		log.Errorf("failed to deleted job %v: %v", ra.jobID, err)
 		ra.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 }
 
 // GetLog ...
 func (ra *RepJobAPI) GetLog() {
-	if ra.jobID == 0 {
+	if ra.jobID == "" {
 		ra.CustomAbort(http.StatusBadRequest, "id is nil")
 	}
 
-	req, err := http.NewRequest("GET", buildJobLogURL(strconv.FormatInt(ra.jobID, 10)), nil)
+	req, err := http.NewRequest("GET", buildJobLogURL(ra.jobID.String()), nil)
+	// req, err := http.NewRequest("GET", buildJobLogURL(strconv.FormatInt(ra.jobID, 10)), nil)
 	if err != nil {
 		log.Errorf("failed to create a request: %v", err)
 		ra.CustomAbort(http.StatusInternalServerError, "")
@@ -157,7 +162,7 @@ func (ra *RepJobAPI) GetLog() {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Errorf("failed to get log for job %d: %v", ra.jobID, err)
+		log.Errorf("failed to get log for job %v: %v", ra.jobID, err)
 		ra.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 	defer resp.Body.Close()

@@ -26,7 +26,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils"
 	"github.com/vmware/harbor/src/common/utils/log"
@@ -36,7 +38,7 @@ import (
 	"github.com/vmware/harbor/src/ui/service/cache"
 )
 
-func checkProjectPermission(userID int, projectID int64) bool {
+func checkProjectPermission(userID bson.ObjectId, projectID bson.ObjectId) bool {
 	roles, err := listRoles(userID, projectID)
 	if err != nil {
 		log.Errorf("error occurred in getProjectPermission: %v", err)
@@ -45,7 +47,7 @@ func checkProjectPermission(userID int, projectID int64) bool {
 	return len(roles) > 0
 }
 
-func hasProjectAdminRole(userID int, projectID int64) bool {
+func hasProjectAdminRole(userID bson.ObjectId, projectID bson.ObjectId) bool {
 	roles, err := listRoles(userID, projectID)
 	if err != nil {
 		log.Errorf("error occurred in getProjectPermission: %v", err)
@@ -62,11 +64,11 @@ func hasProjectAdminRole(userID int, projectID int64) bool {
 }
 
 //sysadmin has all privileges to all projects
-func listRoles(userID int, projectID int64) ([]models.Role, error) {
+func listRoles(userID bson.ObjectId, projectID bson.ObjectId) ([]models.Role, error) {
 	roles := make([]models.Role, 0, 1)
 	isSysAdmin, err := dao.IsAdminRole(userID)
 	if err != nil {
-		log.Errorf("failed to determine whether the user %d is system admin: %v", userID, err)
+		log.Errorf("failed to determine whether the user %v is system admin: %v", userID, err)
 		return roles, err
 	}
 	if isSysAdmin {
@@ -81,33 +83,33 @@ func listRoles(userID int, projectID int64) ([]models.Role, error) {
 
 	rs, err := dao.GetUserProjectRoles(userID, projectID)
 	if err != nil {
-		log.Errorf("failed to get user %d 's roles for project %d: %v", userID, projectID, err)
+		log.Errorf("failed to get user %v 's roles for project %v: %v", userID, projectID, err)
 		return roles, err
 	}
 	roles = append(roles, rs...)
 	return roles, nil
 }
 
-func checkUserExists(name string) int {
+func checkUserExists(name string) bson.ObjectId {
 	u, err := dao.GetUser(models.User{Username: name})
 	if err != nil {
 		log.Errorf("Error occurred in GetUser, error: %v", err)
-		return 0
+		return ""
 	}
 	if u != nil {
 		return u.UserID
 	}
-	return 0
+	return ""
 }
 
 // TriggerReplication triggers the replication according to the policy
-func TriggerReplication(policyID int64, repository string,
+func TriggerReplication(policyID bson.ObjectId, repository string,
 	tags []string, operation string) error {
 	data := struct {
-		PolicyID  int64    `json:"policy_id"`
-		Repo      string   `json:"repository"`
-		Operation string   `json:"operation"`
-		TagList   []string `json:"tags"`
+		PolicyID  bson.ObjectId `json:"policy_id"`
+		Repo      string        `json:"repository"`
+		Operation string        `json:"operation"`
+		TagList   []string      `json:"tags"`
 	}{
 		PolicyID:  policyID,
 		Repo:      repository,
@@ -179,17 +181,17 @@ func TriggerReplicationByRepository(repository string, tags []string, operation 
 			continue
 		}
 		if err := TriggerReplication(policy.ID, repository, tags, operation); err != nil {
-			log.Errorf("failed to trigger replication of policy %d for %s: %v", policy.ID, repository, err)
+			log.Errorf("failed to trigger replication of policy %v for %s: %v", policy.ID, repository, err)
 		} else {
 			log.Infof("replication of policy %d for %s triggered", policy.ID, repository)
 		}
 	}
 }
 
-func postReplicationAction(policyID int64, acton string) error {
+func postReplicationAction(policyID bson.ObjectId, acton string) error {
 	data := struct {
-		PolicyID int64  `json:"policy_id"`
-		Action   string `json:"action"`
+		PolicyID bson.ObjectId `json:"policy_id"`
+		Action   string        `json:"action"`
 	}{
 		PolicyID: policyID,
 		Action:   acton,

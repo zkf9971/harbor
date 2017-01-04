@@ -15,6 +15,10 @@
 
 package models
 
+import (
+	"gopkg.in/mgo.v2/bson"
+)
+
 const (
 	//PROJECTADMIN project administrator
 	PROJECTADMIN = 1
@@ -26,9 +30,10 @@ const (
 
 // Role holds the details of a role.
 type Role struct {
-	RoleID   int    `orm:"pk;column(role_id)" json:"role_id"`
-	RoleCode string `orm:"column(role_code)" json:"role_code"`
-	Name     string `orm:"column(name)" json:"role_name"`
+	ID       bson.ObjectId `orm:"pk;column(role_id)" json:"-" bson:"_id,omitempty"`
+	RoleID   int           `orm:"-" json:"role_id" bson:"role_id"`
+	RoleCode string        `orm:"column(role_code)" json:"role_code" bson:"role_code"`
+	Name     string        `orm:"column(name)" json:"role_name" bson:"name"`
 
-	RoleMask int `orm:"role_mask" json:"role_mask"`
+	RoleMask int `orm:"role_mask" json:"role_mask" bson:"role_mask"`
 }

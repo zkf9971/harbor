@@ -17,14 +17,16 @@ package main
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/vmware/harbor/src/common/dao"
-	"github.com/vmware/harbor/src/jobservice/job"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
+	"github.com/vmware/harbor/src/common/mongo"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/jobservice/job"
 )
 
 func main() {
-	dao.InitDatabase()
+	// dao.InitDatabase()
+	mongo.InitDatabase()
 	initRouters()
 	job.InitWorkerPool()
 	go job.Dispatch()

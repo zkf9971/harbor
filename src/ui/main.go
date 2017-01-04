@@ -25,26 +25,28 @@ import (
 	"github.com/astaxie/beego"
 	_ "github.com/astaxie/beego/session/redis"
 
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
+	"github.com/vmware/harbor/src/common/mongo"
 	"github.com/vmware/harbor/src/ui/api"
+	_ "github.com/vmware/harbor/src/ui/auth/arrowcloud"
 	_ "github.com/vmware/harbor/src/ui/auth/db"
-	_ "github.com/vmware/harbor/src/ui/auth/ldap"
 	"github.com/vmware/harbor/src/ui/config"
 )
 
 const (
-	adminUserID = 1
+	adminUserID   = 1
+	adminUserName = "admin"
 )
 
-func updateInitPassword(userID int, password string) error {
-	queryUser := models.User{UserID: userID}
+func updateInitPassword(userID string, password string) error {
+	queryUser := models.User{Username: userID}
 	user, err := dao.GetUser(queryUser)
 	if err != nil {
-		return fmt.Errorf("Failed to get user, userID: %d %v", userID, err)
+		return fmt.Errorf("Failed to get user, userID: %v %v", userID, err)
 	}
 	if user == nil {
-		return fmt.Errorf("user id: %d does not exist", userID)
+		return fmt.Errorf("user id: %v does not exist", userID)
 	}
 	if user.Salt == "" {
 		salt := utils.GenerateRandomString()
@@ -53,12 +55,12 @@ func updateInitPassword(userID int, password string) error {
 		user.Password = password
 		err = dao.ChangeUserPassword(*user)
 		if err != nil {
-			return fmt.Errorf("Failed to update user encrypted password, userID: %d, err: %v", userID, err)
+			return fmt.Errorf("Failed to update user encrypted password, userID: %v, err: %v", userID, err)
 		}
 
-		log.Infof("User id: %d updated its encypted password successfully.", userID)
+		log.Infof("User id: %v updated its encypted password successfully.", userID)
 	} else {
-		log.Infof("User id: %d already has its encrypted password.", userID)
+		log.Infof("User id: %v already has its encrypted password.", userID)
 	}
 	return nil
 }
@@ -75,9 +77,12 @@ func main() {
 	//
 	beego.AddTemplateExt("htm")
 
-	dao.InitDatabase()
+	//dao.InitDatabase()
+	mongo.InitDatabase()
+	//nothing but satisfies orm module
+	// orm.RegisterDataBase("default", "mysql", "root:root@tcp(mysql:3306)/registry")
 
-	if err := updateInitPassword(adminUserID, config.InitialAdminPassword()); err != nil {
+	if err := updateInitPassword(adminUserName, config.InitialAdminPassword()); err != nil {
 		log.Error(err)
 	}
 	initRouters()

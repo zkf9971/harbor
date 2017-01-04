@@ -16,10 +16,12 @@
 package job
 
 import (
-	"github.com/vmware/harbor/src/common/dao"
-	"github.com/vmware/harbor/src/jobservice/config"
+	"gopkg.in/mgo.v2/bson"
+
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/jobservice/config"
 )
 
 type workerPool struct {
@@ -32,7 +34,7 @@ type workerPool struct {
 var WorkerPool *workerPool
 
 // StopJobs accepts a list of jobs and will try to stop them if any of them is being executed by the worker.
-func (wp *workerPool) StopJobs(jobs []int64) {
+func (wp *workerPool) StopJobs(jobs []bson.ObjectId) {
 	log.Debugf("Works working on jobs: %v will be stopped", jobs)
 	for _, id := range jobs {
 		for _, w := range wp.workerList {
@@ -48,7 +50,7 @@ func (wp *workerPool) StopJobs(jobs []int64) {
 // the actual work to handle the job is done via state machine.
 type Worker struct {
 	ID      int
-	RepJobs chan int64
+	RepJobs chan bson.ObjectId
 	SM      *SM
 	quit    chan bool
 }
@@ -79,13 +81,13 @@ func (w *Worker) Stop() {
 	}()
 }
 
-func (w *Worker) handleRepJob(id int64) {
+func (w *Worker) handleRepJob(id bson.ObjectId) {
 	err := w.SM.Reset(id)
 	if err != nil {
-		log.Errorf("Worker %d, failed to re-initialize statemachine for job: %d, error: %v", w.ID, id, err)
+		log.Errorf("Worker %d, failed to re-initialize statemachine for job: %v, error: %v", w.ID, id, err)
 		err2 := dao.UpdateRepJobStatus(id, models.JobError)
 		if err2 != nil {
-			log.Errorf("Failed to update job status to ERROR, job: %d, error:%v", id, err2)
+			log.Errorf("Failed to update job status to ERROR, job: %v, error:%v", id, err2)
 		}
 		return
 	}
@@ -102,7 +104,7 @@ func (w *Worker) handleRepJob(id int64) {
 func NewWorker(id int) *Worker {
 	w := &Worker{
 		ID:      id,
-		RepJobs: make(chan int64),
+		RepJobs: make(chan bson.ObjectId),
 		quit:    make(chan bool),
 		SM:      &SM{},
 	}
@@ -129,7 +131,7 @@ func Dispatch() {
 	for {
 		select {
 		case job := <-jobQueue:
-			go func(jobID int64) {
+			go func(jobID bson.ObjectId) {
 				log.Debugf("Trying to dispatch job: %d", jobID)
 				worker := <-WorkerPool.workerChan
 				worker.RepJobs <- jobID

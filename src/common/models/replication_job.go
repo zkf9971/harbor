@@ -20,6 +20,7 @@ import (
 
 	"github.com/astaxie/beego/validation"
 	"github.com/vmware/harbor/src/common/utils"
+	"gopkg.in/mgo.v2/bson"
 )
 
 const (
@@ -49,21 +50,21 @@ const (
 
 // RepPolicy is the model for a replication policy, which associate to a project and a target (destination)
 type RepPolicy struct {
-	ID          int64  `orm:"column(id)" json:"id"`
-	ProjectID   int64  `orm:"column(project_id)" json:"project_id"`
-	ProjectName string `json:"project_name,omitempty"`
-	TargetID    int64  `orm:"column(target_id)" json:"target_id"`
-	TargetName  string `json:"target_name,omitempty"`
-	Name        string `orm:"column(name)" json:"name"`
+	ID          bson.ObjectId `orm:"column(id)" json:"id" bson:"_id,omitempty"`
+	ProjectID   bson.ObjectId `orm:"column(project_id)" json:"project_id" bson:"project_id"`
+	ProjectName string        `json:"project_name,omitempty" bson:"-"`
+	TargetID    bson.ObjectId `orm:"column(target_id)" json:"target_id" bson:"target_id"`
+	TargetName  string        `json:"target_name,omitempty" bson:"-"`
+	Name        string        `orm:"column(name)" json:"name" bson:"name"`
 	//	Target       RepTarget `orm:"-" json:"target"`
-	Enabled       int       `orm:"column(enabled)" json:"enabled"`
-	Description   string    `orm:"column(description)" json:"description"`
-	CronStr       string    `orm:"column(cron_str)" json:"cron_str"`
-	StartTime     time.Time `orm:"column(start_time)" json:"start_time"`
-	CreationTime  time.Time `orm:"column(creation_time);auto_now_add" json:"creation_time"`
-	UpdateTime    time.Time `orm:"column(update_time);auto_now" json:"update_time"`
-	ErrorJobCount int       `json:"error_job_count"`
-	Deleted       int       `orm:"column(deleted)" json:"deleted"`
+	Enabled       int       `orm:"column(enabled)" json:"enabled" bson:"enabled"`
+	Description   string    `orm:"column(description)" json:"description" bson:"description"`
+	CronStr       string    `orm:"column(cron_str)" json:"cron_str" bson:"cron_str"`
+	StartTime     time.Time `orm:"column(start_time)" json:"start_time" bson:"start_time"`
+	CreationTime  time.Time `orm:"column(creation_time);auto_now_add" json:"creation_time" bson:"creation_time"`
+	UpdateTime    time.Time `orm:"column(update_time);auto_now" json:"update_time" bson:"update_time"`
+	ErrorJobCount int       `json:"error_job_count" bson:"-"`
+	Deleted       int       `orm:"column(deleted)" json:"deleted" bson:"deleted"`
 }
 
 // Valid ...
@@ -76,11 +77,11 @@ func (r *RepPolicy) Valid(v *validation.Validation) {
 		v.SetError("name", "max length is 256")
 	}
 
-	if r.ProjectID <= 0 {
+	if r.ProjectID == "" {
 		v.SetError("project_id", "invalid")
 	}
 
-	if r.TargetID <= 0 {
+	if r.TargetID <= "" {
 		v.SetError("target_id", "invalid")
 	}
 
@@ -96,13 +97,13 @@ func (r *RepPolicy) Valid(v *validation.Validation) {
 // RepJob is the model for a replication job, which is the execution unit on job service, currently it is used to transfer/remove
 // a repository to/from a remote registry instance.
 type RepJob struct {
-	ID         int64    `orm:"column(id)" json:"id"`
-	Status     string   `orm:"column(status)" json:"status"`
-	Repository string   `orm:"column(repository)" json:"repository"`
-	PolicyID   int64    `orm:"column(policy_id)" json:"policy_id"`
-	Operation  string   `orm:"column(operation)" json:"operation"`
-	Tags       string   `orm:"column(tags)" json:"-"`
-	TagList    []string `orm:"-" json:"tags"`
+	ID         bson.ObjectId `orm:"column(id)" json:"id" bson:"_id"`
+	Status     string        `orm:"column(status)" json:"status"`
+	Repository string        `orm:"column(repository)" json:"repository"`
+	PolicyID   bson.ObjectId `orm:"column(policy_id)" json:"policy_id"`
+	Operation  string        `orm:"column(operation)" json:"operation"`
+	Tags       string        `orm:"column(tags)" json:"-"`
+	TagList    []string      `orm:"-" json:"tags" bson:"-"`
 	//	Policy       RepPolicy `orm:"-" json:"policy"`
 	CreationTime time.Time `orm:"column(creation_time);auto_now_add" json:"creation_time"`
 	UpdateTime   time.Time `orm:"column(update_time);auto_now" json:"update_time"`
@@ -110,14 +111,14 @@ type RepJob struct {
 
 // RepTarget is the model for a replication targe, i.e. destination, which wraps the endpoint URL and username/password of a remote registry.
 type RepTarget struct {
-	ID           int64     `orm:"column(id)" json:"id"`
-	URL          string    `orm:"column(url)" json:"endpoint"`
-	Name         string    `orm:"column(name)" json:"name"`
-	Username     string    `orm:"column(username)" json:"username"`
-	Password     string    `orm:"column(password)" json:"password"`
-	Type         int       `orm:"column(target_type)" json:"type"`
-	CreationTime time.Time `orm:"column(creation_time);auto_now_add" json:"creation_time"`
-	UpdateTime   time.Time `orm:"column(update_time);auto_now" json:"update_time"`
+	ID           bson.ObjectId `orm:"column(id)" json:"id" bson:"_id,omitempty"`
+	URL          string        `orm:"column(url)" json:"endpoint"`
+	Name         string        `orm:"column(name)" json:"name"`
+	Username     string        `orm:"column(username)" json:"username"`
+	Password     string        `orm:"column(password)" json:"password"`
+	Type         int           `orm:"column(target_type)" json:"type"`
+	CreationTime time.Time     `orm:"column(creation_time);auto_now_add" json:"creation_time"`
+	UpdateTime   time.Time     `orm:"column(update_time);auto_now" json:"update_time"`
 }
 
 // Valid ...

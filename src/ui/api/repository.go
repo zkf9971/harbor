@@ -21,10 +21,12 @@ import (
 	"net/http"
 	"sort"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/docker/distribution/manifest/schema1"
 	"github.com/docker/distribution/manifest/schema2"
 	"github.com/vmware/harbor/src/common/api"
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
 	"github.com/vmware/harbor/src/common/utils/registry"
@@ -46,30 +48,35 @@ type RepositoryAPI struct {
 
 // Get ...
 func (ra *RepositoryAPI) Get() {
-	projectID, err := ra.GetInt64("project_id")
-	if err != nil || projectID <= 0 {
-		ra.CustomAbort(http.StatusBadRequest, "invalid project_id")
-	}
+	projectID := bson.ObjectIdHex(ra.GetString("project_id"))
+	// projectID, err := ra.GetInt64("project_id")
+	// if err != nil || projectID <= 0 {
+	// 	ra.CustomAbort(http.StatusBadRequest, "invalid project_id")
+	// }
 
 	page, pageSize := ra.GetPaginationParams()
 
 	project, err := dao.GetProjectByID(projectID)
 	if err != nil {
-		log.Errorf("failed to get project %d: %v", projectID, err)
+		log.Errorf("failed to get project %v: %v", projectID, err)
 		ra.CustomAbort(http.StatusInternalServerError, "")
 	}
 
 	if project == nil {
-		ra.CustomAbort(http.StatusNotFound, fmt.Sprintf("project %d not found", projectID))
+		ra.CustomAbort(http.StatusNotFound, fmt.Sprintf("project %v not found", projectID))
 	}
 
 	if project.Public == 0 {
-		var userID int
+		var userID bson.ObjectId
 
 		if svc_utils.VerifySecret(ra.Ctx.Request) {
-			userID = 1
+			adminUser, err := dao.GetUser(models.User{Username: "admin"})
+			if err != nil {
+				ra.CustomAbort(http.StatusInternalServerError, err.Error())
+			}
+			userID = adminUser.UserID
 		} else {
-			userID = ra.ValidateUser()
+			userID = ra.ValidateUser().UserID
 		}
 
 		if !checkProjectPermission(userID, projectID) {
@@ -120,7 +127,7 @@ func (ra *RepositoryAPI) Delete() {
 	}
 
 	if project.Public == 0 {
-		userID := ra.ValidateUser()
+		userID := ra.ValidateUser().UserID
 		if !hasProjectAdminRole(userID, project.ProjectID) {
 			ra.CustomAbort(http.StatusForbidden, "")
 		}
@@ -228,7 +235,7 @@ func (ra *RepositoryAPI) GetTags() {
 	}
 
 	if project.Public == 0 {
-		userID := ra.ValidateUser()
+		userID := ra.ValidateUser().UserID
 		if !checkProjectPermission(userID, project.ProjectID) {
 			ra.CustomAbort(http.StatusForbidden, "")
 		}
@@ -296,7 +303,7 @@ func (ra *RepositoryAPI) GetManifests() {
 	}
 
 	if project.Public == 0 {
-		userID := ra.ValidateUser()
+		userID := ra.ValidateUser().UserID
 		if !checkProjectPermission(userID, project.ProjectID) {
 			ra.CustomAbort(http.StatusForbidden, "")
 		}
@@ -392,8 +399,8 @@ func (ra *RepositoryAPI) getUsername() (string, error) {
 	// and then get username from DB according to the userId
 	sessionUserID := ra.GetSession("userId")
 	if sessionUserID != nil {
-		userID, ok := sessionUserID.(int)
-		if ok {
+		userID := bson.ObjectIdHex(sessionUserID.(string))
+		if true {
 			u := models.User{
 				UserID: userID,
 			}

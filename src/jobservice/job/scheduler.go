@@ -16,19 +16,21 @@
 package job
 
 import (
-	"github.com/vmware/harbor/src/common/utils/log"
 	"time"
+
+	"github.com/vmware/harbor/src/common/utils/log"
+	"gopkg.in/mgo.v2/bson"
 )
 
-var jobQueue = make(chan int64)
+var jobQueue = make(chan bson.ObjectId)
 
 // Schedule put a job id into job queue.
-func Schedule(jobID int64) {
+func Schedule(jobID bson.ObjectId) {
 	jobQueue <- jobID
 }
 
 // Reschedule is called by statemachine to retry a job
-func Reschedule(jobID int64) {
+func Reschedule(jobID bson.ObjectId) {
 	log.Debugf("Job %d will be rescheduled in 5 minutes", jobID)
 	time.Sleep(5 * time.Minute)
 	log.Debugf("Rescheduling job %d", jobID)

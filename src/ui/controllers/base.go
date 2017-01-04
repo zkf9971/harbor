@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 	"strings"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/astaxie/beego"
 	"github.com/beego/i18n"
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
 	"github.com/vmware/harbor/src/ui/auth"
@@ -124,9 +126,9 @@ func (b *BaseController) Prepare() {
 
 	b.Data["SelfRegistration"] = config.SelfRegistration()
 
-	sessionUserID := b.GetSession("userId")
-	if sessionUserID != nil {
-		isAdmin, err := dao.IsAdminRole(sessionUserID.(int))
+	sessionUserID, ok := b.GetSession("userId").(bson.ObjectId)
+	if ok {
+		isAdmin, err := dao.IsAdminRole(sessionUserID)
 		if err != nil {
 			log.Errorf("Error occurred in IsAdminRole: %v", err)
 		}

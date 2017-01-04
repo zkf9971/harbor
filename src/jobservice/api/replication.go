@@ -21,16 +21,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
-	"strconv"
 
 	"github.com/vmware/harbor/src/common/api"
-	"github.com/vmware/harbor/src/common/dao"
-	"github.com/vmware/harbor/src/jobservice/job"
-	"github.com/vmware/harbor/src/jobservice/config"
-	"github.com/vmware/harbor/src/jobservice/utils"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	u "github.com/vmware/harbor/src/common/utils"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/jobservice/config"
+	"github.com/vmware/harbor/src/jobservice/job"
+	"github.com/vmware/harbor/src/jobservice/utils"
+	"gopkg.in/mgo.v2/bson"
 )
 
 // ReplicationJob handles /api/replicationJobs /api/replicationJobs/:id/log
@@ -41,10 +41,10 @@ type ReplicationJob struct {
 
 // ReplicationReq holds informations of request for /api/replicationJobs
 type ReplicationReq struct {
-	PolicyID  int64    `json:"policy_id"`
-	Repo      string   `json:"repository"`
-	Operation string   `json:"operation"`
-	TagList   []string `json:"tags"`
+	PolicyID  bson.ObjectId `json:"policy_id"`
+	Repo      string        `json:"repository"`
+	Operation string        `json:"operation"`
+	TagList   []string      `json:"tags"`
 }
 
 // Prepare ...
@@ -76,18 +76,18 @@ func (rj *ReplicationJob) Post() {
 	p, err := dao.GetRepPolicy(data.PolicyID)
 	if err != nil {
 		log.Errorf("Failed to get policy, error: %v", err)
-		rj.RenderError(http.StatusInternalServerError, fmt.Sprintf("Failed to get policy, id: %d", data.PolicyID))
+		rj.RenderError(http.StatusInternalServerError, fmt.Sprintf("Failed to get policy, id: %v", data.PolicyID))
 		return
 	}
 	if p == nil {
-		log.Errorf("Policy not found, id: %d", data.PolicyID)
-		rj.RenderError(http.StatusNotFound, fmt.Sprintf("Policy not found, id: %d", data.PolicyID))
+		log.Errorf("Policy not found, id: %v", data.PolicyID)
+		rj.RenderError(http.StatusNotFound, fmt.Sprintf("Policy not found, id: %v", data.PolicyID))
 		return
 	}
 	if len(data.Repo) == 0 { // sync all repositories
 		repoList, err := getRepoList(p.ProjectID)
 		if err != nil {
-			log.Errorf("Failed to get repository list, project id: %d, error: %v", p.ProjectID, err)
+			log.Errorf("Failed to get repository list, project id: %v, error: %v", p.ProjectID, err)
 			rj.RenderError(http.StatusInternalServerError, err.Error())
 			return
 		}
@@ -116,7 +116,7 @@ func (rj *ReplicationJob) Post() {
 	}
 }
 
-func (rj *ReplicationJob) addJob(repo string, policyID int64, operation string, tags ...string) error {
+func (rj *ReplicationJob) addJob(repo string, policyID bson.ObjectId, operation string, tags ...string) error {
 	j := models.RepJob{
 		Repository: repo,
 		PolicyID:   policyID,
@@ -135,8 +135,8 @@ func (rj *ReplicationJob) addJob(repo string, policyID int64, operation string, 
 
 // RepActionReq holds informations of request for /api/replicationJobs/actions
 type RepActionReq struct {
-	PolicyID int64  `json:"policy_id"`
-	Action   string `json:"action"`
+	PolicyID bson.ObjectId `json:"policy_id"`
+	Action   string        `json:"action"`
 }
 
 // HandleAction supports some operations to all the jobs of one policy
@@ -155,7 +155,7 @@ func (rj *ReplicationJob) HandleAction() {
 		rj.RenderError(http.StatusInternalServerError, "Faild to get jobs to stop")
 		return
 	}
-	var jobIDList []int64
+	var jobIDList []bson.ObjectId
 	for _, j := range jobs {
 		jobIDList = append(jobIDList, j.ID)
 	}
@@ -165,23 +165,24 @@ func (rj *ReplicationJob) HandleAction() {
 // GetLog gets logs of the job
 func (rj *ReplicationJob) GetLog() {
 	idStr := rj.Ctx.Input.Param(":id")
-	jid, err := strconv.ParseInt(idStr, 10, 64)
-	if err != nil {
-		log.Errorf("Error parsing job id: %s, error: %v", idStr, err)
-		rj.RenderError(http.StatusBadRequest, "Invalid job id")
-		return
-	}
+	jid := bson.ObjectIdHex(idStr)
+	// jid, err := strconv.ParseInt(idStr, 10, 64)
+	// if err != nil {
+	// 	log.Errorf("Error parsing job id: %s, error: %v", idStr, err)
+	// 	rj.RenderError(http.StatusBadRequest, "Invalid job id")
+	// 	return
+	// }
 	logFile := utils.GetJobLogPath(jid)
 	rj.Ctx.Output.Download(logFile)
 }
 
 // calls the api from UI to get repo list
-func getRepoList(projectID int64) ([]string, error) {
+func getRepoList(projectID bson.ObjectId) ([]string, error) {
 	repositories := []string{}
 
 	client := &http.Client{}
 	uiURL := config.LocalUIURL()
-	next := "/api/repositories?project_id=" + strconv.Itoa(int(projectID))
+	next := "/api/repositories?project_id=" + projectID.String()
 	for len(next) != 0 {
 		req, err := http.NewRequest("GET", uiURL+next, nil)
 		if err != nil {

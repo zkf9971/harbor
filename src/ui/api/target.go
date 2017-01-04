@@ -22,8 +22,10 @@ import (
 	"net/url"
 	"strconv"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/vmware/harbor/src/common/api"
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils"
 	"github.com/vmware/harbor/src/common/utils/log"
@@ -61,14 +63,15 @@ func (t *TargetAPI) Ping() {
 
 	idStr := t.GetString("id")
 	if len(idStr) != 0 {
-		id, err := strconv.ParseInt(idStr, 10, 64)
-		if err != nil {
-			t.CustomAbort(http.StatusBadRequest, fmt.Sprintf("id %s is invalid", idStr))
-		}
+		id := bson.ObjectIdHex(idStr)
+		// id, err := strconv.ParseInt(idStr, 10, 64)
+		// if err != nil {
+		// 	t.CustomAbort(http.StatusBadRequest, fmt.Sprintf("id %s is invalid", idStr))
+		// }
 
 		target, err := dao.GetRepTarget(id)
 		if err != nil {
-			log.Errorf("failed to get target %d: %v", id, err)
+			log.Errorf("failed to get target %v: %v", id, err)
 			t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 		}
 
@@ -129,7 +132,7 @@ func (t *TargetAPI) Get() {
 
 	target, err := dao.GetRepTarget(id)
 	if err != nil {
-		log.Errorf("failed to get target %d: %v", id, err)
+		log.Errorf("failed to get target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -228,7 +231,7 @@ func (t *TargetAPI) Put() {
 
 	originalTarget, err := dao.GetRepTarget(id)
 	if err != nil {
-		log.Errorf("failed to get target %d: %v", id, err)
+		log.Errorf("failed to get target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -238,7 +241,7 @@ func (t *TargetAPI) Put() {
 
 	policies, err := dao.GetRepPolicyByTarget(id)
 	if err != nil {
-		log.Errorf("failed to get policies according target %d: %v", id, err)
+		log.Errorf("failed to get policies according target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -292,7 +295,7 @@ func (t *TargetAPI) Put() {
 	}
 
 	if err := dao.UpdateRepTarget(*target); err != nil {
-		log.Errorf("failed to update target %d: %v", id, err)
+		log.Errorf("failed to update target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 }
@@ -303,7 +306,7 @@ func (t *TargetAPI) Delete() {
 
 	target, err := dao.GetRepTarget(id)
 	if err != nil {
-		log.Errorf("failed to get target %d: %v", id, err)
+		log.Errorf("failed to get target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -313,7 +316,7 @@ func (t *TargetAPI) Delete() {
 
 	policies, err := dao.GetRepPolicyByTarget(id)
 	if err != nil {
-		log.Errorf("failed to get policies according target %d: %v", id, err)
+		log.Errorf("failed to get policies according target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -322,7 +325,7 @@ func (t *TargetAPI) Delete() {
 	}
 
 	if err = dao.DeleteRepTarget(id); err != nil {
-		log.Errorf("failed to delete target %d: %v", id, err)
+		log.Errorf("failed to delete target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 }
@@ -350,7 +353,7 @@ func (t *TargetAPI) ListPolicies() {
 
 	target, err := dao.GetRepTarget(id)
 	if err != nil {
-		log.Errorf("failed to get target %d: %v", id, err)
+		log.Errorf("failed to get target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -360,7 +363,7 @@ func (t *TargetAPI) ListPolicies() {
 
 	policies, err := dao.GetRepPolicyByTarget(id)
 	if err != nil {
-		log.Errorf("failed to get policies according target %d: %v", id, err)
+		log.Errorf("failed to get policies according target %v: %v", id, err)
 		t.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 

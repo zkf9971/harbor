@@ -15,21 +15,23 @@ package models
 
 import (
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // RepoRecord holds the record of an repository in DB, all the infors are from the registry notification event.
 type RepoRecord struct {
-	RepositoryID string    `orm:"column(repository_id);pk" json:"repository_id"`
-	Name         string    `orm:"column(name)" json:"name"`
-	OwnerName    string    `orm:"-"`
-	OwnerID      int64     `orm:"column(owner_id)"  json:"owner_id"`
-	ProjectName  string    `orm:"-"`
-	ProjectID    int64     `orm:"column(project_id)"  json:"project_id"`
-	Description  string    `orm:"column(description)" json:"description"`
-	PullCount    int64     `orm:"column(pull_count)" json:"pull_count"`
-	StarCount    int64     `orm:"column(star_count)" json:"star_count"`
-	CreationTime time.Time `orm:"column(creation_time);auto_now_add" json:"creation_time"`
-	UpdateTime   time.Time `orm:"column(update_time);auto_now" json:"update_time"`
+	RepositoryID bson.ObjectId `orm:"column(repository_id);pk" json:"repository_id" bson:"_id,omitempty"`
+	Name         string        `orm:"column(name)" json:"name" bson:"name"`
+	OwnerName    string        `orm:"-" bson:"-"`
+	OwnerID      bson.ObjectId `orm:"column(owner_id)"  json:"owner_id" bson:"owner_id"`
+	ProjectName  string        `orm:"-" bson:"-"`
+	ProjectID    bson.ObjectId `orm:"column(project_id)"  json:"project_id" bson:"project_id"`
+	Description  string        `orm:"column(description)" json:"description" bson:"description"`
+	PullCount    int64         `orm:"column(pull_count)" json:"pull_count" bson:"pull_count"`
+	StarCount    int64         `orm:"column(star_count)" json:"star_count" bson:"star_count"`
+	CreationTime time.Time     `orm:"column(creation_time);auto_now_add" json:"creation_time" bson:"creation_time"`
+	UpdateTime   time.Time     `orm:"column(update_time);auto_now" json:"update_time" bson:"update_time"`
 }
 
 //TableName is required by by beego orm to map RepoRecord to table repository

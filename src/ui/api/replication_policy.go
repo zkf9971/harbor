@@ -19,12 +19,13 @@ import (
 	"fmt"
 
 	"net/http"
-	"strconv"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	"github.com/vmware/harbor/src/common/api"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
-    "github.com/vmware/harbor/src/common/api"
 )
 
 // RepPolicyAPI handles /api/replicationPolicies /api/replicationPolicies/:id/enablement
@@ -38,7 +39,7 @@ func (pa *RepPolicyAPI) Prepare() {
 	var err error
 	isAdmin, err := dao.IsAdminRole(uid)
 	if err != nil {
-		log.Errorf("Failed to Check if the user is admin, error: %v, uid: %d", err, uid)
+		log.Errorf("Failed to Check if the user is admin, error: %v, uid: %v", err, uid)
 	}
 	if !isAdmin {
 		pa.CustomAbort(http.StatusForbidden, "")
@@ -68,14 +69,15 @@ func (pa *RepPolicyAPI) List() {
 	name := pa.GetString("name")
 	projectIDStr := pa.GetString("project_id")
 
-	var projectID int64
+	var projectID bson.ObjectId
 	var err error
 
 	if len(projectIDStr) != 0 {
-		projectID, err = strconv.ParseInt(projectIDStr, 10, 64)
-		if err != nil || projectID <= 0 {
-			pa.CustomAbort(http.StatusBadRequest, "invalid project ID")
-		}
+		projectID = bson.ObjectIdHex(projectIDStr)
+		// projectID, err = strconv.ParseInt(projectIDStr, 10, 64)
+		// if err != nil || projectID <= 0 {
+		// 	pa.CustomAbort(http.StatusBadRequest, "invalid project ID")
+		// }
 	}
 
 	policies, err := dao.FilterRepPolicies(name, projectID)
@@ -151,7 +153,8 @@ func (pa *RepPolicyAPI) Post() {
 		}()
 	}
 
-	pa.Redirect(http.StatusCreated, strconv.FormatInt(pid, 10))
+	pa.Redirect(http.StatusCreated, pid.String())
+	// pa.Redirect(http.StatusCreated, strconv.FormatInt(pid, 10))
 }
 
 // Put modifies name, description, target and enablement of policy
@@ -287,7 +290,7 @@ func (pa *RepPolicyAPI) Put() {
 	*/
 
 	if err = dao.UpdateRepPolicy(policy); err != nil {
-		log.Errorf("failed to update policy %d: %v", id, err)
+		log.Errorf("failed to update policy %v: %v", id, err)
 		pa.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -311,7 +314,7 @@ func (pa *RepPolicyAPI) UpdateEnablement() {
 	id := pa.GetIDFromURL()
 	policy, err := dao.GetRepPolicy(id)
 	if err != nil {
-		log.Errorf("failed to get policy %d: %v", id, err)
+		log.Errorf("failed to get policy %v: %v", id, err)
 		pa.CustomAbort(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 	}
 
@@ -339,7 +342,7 @@ func (pa *RepPolicyAPI) UpdateEnablement() {
 	if e.Enabled == 1 {
 		go func() {
 			if err := TriggerReplication(id, "", nil, models.RepOpTransfer); err != nil {
-				log.Errorf("failed to trigger replication of %d: %v", id, err)
+				log.Errorf("failed to trigger replication of %v: %v", id, err)
 			} else {
 				log.Infof("replication of %d triggered", id)
 			}
@@ -347,7 +350,7 @@ func (pa *RepPolicyAPI) UpdateEnablement() {
 	} else {
 		go func() {
 			if err := postReplicationAction(id, "stop"); err != nil {
-				log.Errorf("failed to stop replication of %d: %v", id, err)
+				log.Errorf("failed to stop replication of %v: %v", id, err)
 			} else {
 				log.Infof("try to stop replication of %d", id)
 			}
@@ -361,7 +364,7 @@ func (pa *RepPolicyAPI) Delete() {
 	id := pa.GetIDFromURL()
 	policy, err := dao.GetRepPolicy(id)
 	if err != nil {
-		log.Errorf("failed to get policy %d: %v", id, err)
+		log.Errorf("failed to get policy %v: %v", id, err)
 		pa.CustomAbort(http.StatusInternalServerError, "")
 	}
 
@@ -375,7 +378,7 @@ func (pa *RepPolicyAPI) Delete() {
 
 	jobs, err := dao.GetRepJobByPolicy(id)
 	if err != nil {
-		log.Errorf("failed to get jobs of policy %d: %v", id, err)
+		log.Errorf("failed to get jobs of policy %v: %v", id, err)
 		pa.CustomAbort(http.StatusInternalServerError, "")
 	}
 
@@ -388,7 +391,7 @@ func (pa *RepPolicyAPI) Delete() {
 	}
 
 	if err = dao.DeleteRepPolicy(id); err != nil {
-		log.Errorf("failed to delete policy %d: %v", id, err)
+		log.Errorf("failed to delete policy %v: %v", id, err)
 		pa.CustomAbort(http.StatusInternalServerError, "")
 	}
 }

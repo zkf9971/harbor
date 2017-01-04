@@ -3,7 +3,9 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
 )
@@ -25,19 +27,19 @@ func (omc *OptionalMenuController) Get() {
 
 	if sessionUserID != nil {
 		hasLoggedIn = true
-		userID := sessionUserID.(int)
+		userID := sessionUserID.(bson.ObjectId)
 		u, err := dao.GetUser(models.User{UserID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			omc.CustomAbort(http.StatusInternalServerError, "Internal error.")
 		}
 		if u == nil {
-			log.Warningf("User was deleted already, user id: %d, canceling request.", userID)
+			log.Warningf("User was deleted already, user id: %v, canceling request.", userID)
 			omc.CustomAbort(http.StatusUnauthorized, "")
 		}
 		omc.Data["Username"] = u.Username
 
-		if userID == 1 {
+		if u.Username == "admin" {
 			isAdminForLdap = true
 		}
 
@@ -45,7 +47,7 @@ func (omc *OptionalMenuController) Get() {
 			allowSettingAccount = true
 		}
 
-		isAdmin, err := dao.IsAdminRole(sessionUserID.(int))
+		isAdmin, err := dao.IsAdminRole(userID)
 		if err != nil {
 			log.Errorf("Error occurred in IsAdminRole: %v", err)
 			omc.CustomAbort(http.StatusInternalServerError, "")

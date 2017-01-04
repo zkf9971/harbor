@@ -17,25 +17,28 @@ package models
 
 import (
 	"time"
+
+	"gopkg.in/mgo.v2/bson"
 )
 
 // Project holds the details of a project.
 type Project struct {
-	ProjectID       int64     `orm:"pk;column(project_id)" json:"project_id"`
-	OwnerID         int       `orm:"column(owner_id)" json:"owner_id"`
-	Name            string    `orm:"column(name)" json:"name"`
-	CreationTime    time.Time `orm:"column(creation_time)" json:"creation_time"`
-	CreationTimeStr string    `orm:"-" json:"creation_time_str"`
-	Deleted         int       `orm:"column(deleted)" json:"deleted"`
+	ProjectID       bson.ObjectId `orm:"pk;column(project_id)" json:"project_id" bson:"_id,omitempty"`
+	OwnerID         bson.ObjectId `orm:"column(owner_id)" json:"owner_id" bson:"owner_id"`
+	Name            string        `orm:"column(name)" json:"name" bson:"name"`
+	Comment         string        `json:"comment" bson:"comment" bson:"comment"`
+	CreationTime    time.Time     `orm:"column(creation_time)" json:"creation_time" bson:"creation_time"`
+	CreationTimeStr string        `orm:"-" json:"creation_time_str" bson:"-"`
+	Deleted         int           `orm:"column(deleted)" json:"deleted" bson:"deleted"`
 	//UserID          int `json:"UserId"`
-	OwnerName string `orm:"-" json:"owner_name"`
-	Public    int    `orm:"column(public)" json:"public"`
+	OwnerName string `orm:"-" json:"owner_name" bson:"-"`
+	Public    int    `orm:"column(public)" json:"public" bson:"public"`
 	//This field does not have correspondent column in DB, this is just for UI to disable button
-	Togglable bool `orm:"-"`
+	Togglable bool `orm:"-" bson:"-"`
 
-	UpdateTime time.Time `orm:"update_time" json:"update_time"`
-	Role       int       `orm:"-" json:"current_user_role_id"`
-	RepoCount  int       `orm:"-" json:"repo_count"`
+	UpdateTime time.Time `orm:"update_time" json:"update_time" bson:"update_time"`
+	Role       int       `orm:"-" json:"current_user_role_id" bson:"-"`
+	RepoCount  int       `orm:"-" json:"repo_count" bson:"-"`
 }
 
 // ProjectSorter holds an array of projects

@@ -6,15 +6,17 @@ import (
 	"path/filepath"
 	"syscall"
 
+	"gopkg.in/mgo.v2/bson"
+
 	"github.com/vmware/harbor/src/common/api"
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/utils/log"
 )
 
 //SystemInfoAPI handle requests for getting system info /api/systeminfo
 type SystemInfoAPI struct {
 	api.BaseAPI
-	currentUserID int
+	currentUserID bson.ObjectId
 	isAdmin       bool
 }
 
@@ -34,7 +36,7 @@ type Storage struct {
 
 // Prepare for validating user if an admin.
 func (sia *SystemInfoAPI) Prepare() {
-	sia.currentUserID = sia.ValidateUser()
+	sia.currentUserID = sia.ValidateUser().UserID
 
 	var err error
 	sia.isAdmin, err = dao.IsAdminRole(sia.currentUserID)

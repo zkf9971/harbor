@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vmware/harbor/src/common/dao"
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/utils/log"
 	"github.com/vmware/harbor/src/ui/config"
 
@@ -46,7 +46,7 @@ func init() {
 
 // GetResourceActions ...
 func GetResourceActions(scopes []string) []*token.ResourceActions {
-	log.Debugf("scopes: %+v", scopes)
+	log.Debugf("scopes: %+v", scopes) //[repository:14301/hello-world:push,pull]
 	var res []*token.ResourceActions
 	for _, s := range scopes {
 		if s == "" {

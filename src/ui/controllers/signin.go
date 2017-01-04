@@ -3,7 +3,9 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/vmware/harbor/src/common/dao"
+	"gopkg.in/mgo.v2/bson"
+
+	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
 )
@@ -20,14 +22,14 @@ func (sic *SignInController) Get() {
 	var username string
 	if sessionUserID != nil {
 		hasLoggedIn = true
-		userID := sessionUserID.(int)
+		userID := sessionUserID.(bson.ObjectId)
 		u, err := dao.GetUser(models.User{UserID: userID})
 		if err != nil {
 			log.Errorf("Error occurred in GetUser, error: %v", err)
 			sic.CustomAbort(http.StatusInternalServerError, "Internal error.")
 		}
 		if u == nil {
-			log.Warningf("User was deleted already, user id: %d, canceling request.", userID)
+			log.Warningf("User was deleted already, user id: %v, canceling request.", userID)
 			sic.CustomAbort(http.StatusUnauthorized, "")
 		}
 		username = u.Username
