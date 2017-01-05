@@ -7,11 +7,11 @@ import (
 	"text/template"
 
 	"github.com/astaxie/beego"
-	"github.com/vmware/harbor/src/common/config"
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/ui/appconfig"
 )
 
 type messageDetail struct {
@@ -49,7 +49,7 @@ func (cc *CommonController) SendEmail() {
 
 		message := new(bytes.Buffer)
 
-		harborURL := config.ExtEndpoint()
+		harborURL := appconfig.ExtEndpoint()
 		if harborURL == "" {
 			harborURL = "localhost"
 		}

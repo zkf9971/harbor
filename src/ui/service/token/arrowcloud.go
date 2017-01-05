@@ -9,14 +9,14 @@ import (
 	"github.com/docker/distribution/registry/auth/token"
 	"github.com/vmware/harbor/src/common/mongo"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/ui/appconfig"
 	"github.com/vmware/harbor/src/ui/auth/arrowcloud"
-	"github.com/vmware/harbor/src/ui/config"
 )
 
 // FilterPushAccessByApp filters push access based on arrowcloud app settings
 func FilterPushAccessByApp(username string, a *token.ResourceActions) {
 
-	if !config.AppCheck() {
+	if !appconfig.AppCheck() {
 		log.Warningf("skip checking arrowcloud app for push access.")
 		return
 	}
@@ -127,7 +127,7 @@ func checkPushPermission(projectName, imageName, userEmail string) (bool, error)
 	}
 
 	//can only push images which have corresponding apps
-	appOnly := config.AppOnly()
+	appOnly := appconfig.AppOnly()
 	if len(apps) == 0 {
 		if appOnly {
 			log.Debugf("It's not allowed to push images which don't have corresponding arrowcloud apps.")

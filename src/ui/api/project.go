@@ -26,7 +26,7 @@ import (
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
-	"github.com/vmware/harbor/src/ui/config"
+	"github.com/vmware/harbor/src/ui/appconfig"
 
 	"strconv"
 	"time"
@@ -81,7 +81,7 @@ func (p *ProjectAPI) Post() {
 	if err != nil {
 		log.Errorf("Failed to check admin role: %v", err)
 	}
-	if !isSysAdmin && config.OnlyAdminCreateProject() {
+	if !isSysAdmin && appconfig.OnlyAdminCreateProject() {
 		log.Errorf("Only sys admin can create project")
 		p.RenderError(http.StatusForbidden, "Only system admin can create project")
 		return

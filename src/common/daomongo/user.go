@@ -87,6 +87,11 @@ func ListUsers(query models.User) ([]models.User, error) {
 			"$ne": "admin",
 		},
 	}
+
+	if query.Username != "" {
+		userQ["username"] = bson.RegEx{query.Username, "i"}
+	}
+
 	sort := []string{"-_id"}
 
 	users := []models.User{}

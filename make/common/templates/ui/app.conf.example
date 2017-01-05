@@ -1,0 +1,37 @@
+appname = registry_auth
+runmode = prod
+EXT_ENDPOINT = http://harbor.jin.appctest.com
+TOKEN_ENDPOINT = http://192.168.99.100
+VERIFY_REMOTE_CERT = false
+LOG_LEVEL = debug
+AUTH_MODE = arrowcloud
+TOKEN_EXPIRATION = 30
+HARBOR_ADMIN_PASSWORD = AuthAdmin2016
+EXT_REG_URL = hostname
+UI_SECRET = secretkey1234567
+SECRET_KEY = secretkey1234567
+SELF_REGISTRATION = true
+PROJECT_CREATION_RESTRICTION = adminonly
+REGISTRY_URL = http://192.168.99.100:5000
+JOB_SERVICE_URL = http://jobservice
+APP_ONLY = true 
+APP_CHECK = true
+
+[lang]
+types = en-US|zh-CN
+names = en-US|zh-CN
+
+[dev]
+httpport = 80
+
+[prod]
+httpport = 8000
+
+[mail]
+identity = $email_identity
+host = $email_server
+port = $email_server_port
+username = $email_username
+password = $email_password
+from = $email_from
+ssl = $email_ssl

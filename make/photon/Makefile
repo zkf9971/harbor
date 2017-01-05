@@ -33,7 +33,8 @@ JOBSERVICEBINARYNAME=harbor_jobservice
 DOCKERFILEPATH=$(MAKEPATH)/photon
 DOCKERFILEPATH_UI=$(DOCKERFILEPATH)/ui
 DOCKERFILENAME_UI=Dockerfile
-DOCKERIMAGENAME_UI=vmware/harbor-ui
+# DOCKERIMAGENAME_UI=vmware/harbor-ui
+DOCKERIMAGENAME_UI=registry.cloudapp-enterprise-preprod.appctest.com:5000/ypjin/harbor_ui
 DOCKERFILEPATH_JOBSERVICE=$(DOCKERFILEPATH)/jobservice
 DOCKERFILENAME_JOBSERVICE=Dockerfile
 DOCKERIMAGENAME_JOBSERVICE=vmware/harbor-jobservice
@@ -60,13 +61,13 @@ build:
 	$(DOCKERBUILD) -f $(DOCKERFILEPATH_UI)/$(DOCKERFILENAME_UI) -t $(DOCKERIMAGENAME_UI):$(VERSIONTAG) .
 	@echo "Done."
 	
-	@echo "building jobservice container for photon..."
-	$(DOCKERBUILD) -f $(DOCKERFILEPATH_JOBSERVICE)/$(DOCKERFILENAME_JOBSERVICE) -t $(DOCKERIMAGENAME_JOBSERVICE):$(VERSIONTAG) .
-	@echo "Done."
+	# @echo "building jobservice container for photon..."
+	# $(DOCKERBUILD) -f $(DOCKERFILEPATH_JOBSERVICE)/$(DOCKERFILENAME_JOBSERVICE) -t $(DOCKERIMAGENAME_JOBSERVICE):$(VERSIONTAG) .
+	# @echo "Done."
 	
-	@echo "building log container for photon..."
-	$(DOCKERBUILD) -f $(DOCKERFILEPATH_LOG)/$(DOCKERFILENAME_LOG) -t $(DOCKERIMAGENAME_LOG):$(VERSIONTAG) .
-	@echo "Done."
+	# @echo "building log container for photon..."
+	# $(DOCKERBUILD) -f $(DOCKERFILEPATH_LOG)/$(DOCKERFILENAME_LOG) -t $(DOCKERIMAGENAME_LOG):$(VERSIONTAG) .
+	# @echo "Done."
 	
 cleanimage:
 	@echo "cleaning image for photon..."

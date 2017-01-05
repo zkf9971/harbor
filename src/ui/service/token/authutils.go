@@ -26,7 +26,7 @@ import (
 
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/utils/log"
-	"github.com/vmware/harbor/src/ui/config"
+	"github.com/vmware/harbor/src/ui/appconfig"
 
 	"github.com/docker/distribution/registry/auth/token"
 	"github.com/docker/libtrust"
@@ -40,7 +40,7 @@ const (
 var expiration int //minutes
 
 func init() {
-	expiration = config.TokenExpiration()
+	expiration = appconfig.TokenExpiration()
 	log.Infof("token expiration: %d minutes", expiration)
 }
 
@@ -91,7 +91,7 @@ func FilterAccess(username string, a *token.ResourceActions) {
 		repoLength := len(repoSplit)
 		if repoLength > 1 { //Only check the permission when the requested image has a namespace, i.e. project
 			var projectName string
-			registryURL := config.ExtRegistryURL()
+			registryURL := appconfig.ExtRegistryURL()
 			if repoSplit[0] == registryURL {
 				projectName = repoSplit[1]
 				log.Infof("Detected Registry URL in Project Name. Assuming this is a notary request and setting Project Name as %s\n", projectName)

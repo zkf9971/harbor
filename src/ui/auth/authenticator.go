@@ -21,7 +21,7 @@ import (
 
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
-	"github.com/vmware/harbor/src/ui/config"
+	"github.com/vmware/harbor/src/ui/appconfig"
 )
 
 // 1.5 seconds
@@ -50,7 +50,7 @@ func Register(name string, authenticator Authenticator) {
 // Login authenticates user credentials based on setting.
 func Login(m models.AuthModel) (*models.User, error) {
 
-	var authMode = config.AuthMode()
+	var authMode = appconfig.AuthMode()
 	if authMode == "" || m.Principal == "admin" {
 		authMode = "db_auth"
 	}

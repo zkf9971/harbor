@@ -13,8 +13,8 @@ import (
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/ui/appconfig"
 	"github.com/vmware/harbor/src/ui/auth"
-	"github.com/vmware/harbor/src/ui/config"
 )
 
 // BaseController wraps common methods such as i18n support, forward,  which can be leveraged by other UI render controllers.
@@ -105,7 +105,7 @@ func (b *BaseController) Prepare() {
 	b.Data["CurLang"] = curLang.Name
 	b.Data["RestLangs"] = restLangs
 
-	authMode := config.AuthMode()
+	authMode := appconfig.AuthMode()
 	if authMode == "" {
 		authMode = "db_auth"
 	}
@@ -122,9 +122,9 @@ func (b *BaseController) Prepare() {
 		b.UseCompressedJS = false
 	}
 
-	b.SelfRegistration = config.SelfRegistration()
+	b.SelfRegistration = appconfig.SelfRegistration()
 
-	b.Data["SelfRegistration"] = config.SelfRegistration()
+	b.Data["SelfRegistration"] = appconfig.SelfRegistration()
 
 	sessionUserID, ok := b.GetSession("userId").(bson.ObjectId)
 	if ok {

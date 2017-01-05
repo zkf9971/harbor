@@ -3,7 +3,7 @@ package controllers
 import (
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/utils/log"
-	"github.com/vmware/harbor/src/ui/config"
+	"github.com/vmware/harbor/src/ui/appconfig"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -24,6 +24,6 @@ func (pc *ProjectController) Get() {
 			isSysAdmin = false
 		}
 	}
-	pc.Data["CanCreate"] = !config.OnlyAdminCreateProject() || isSysAdmin
+	pc.Data["CanCreate"] = !appconfig.OnlyAdminCreateProject() || isSysAdmin
 	pc.Forward("page_title_project", "project.htm")
 }

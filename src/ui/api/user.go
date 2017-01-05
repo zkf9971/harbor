@@ -27,7 +27,7 @@ import (
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
-	"github.com/vmware/harbor/src/ui/config"
+	"github.com/vmware/harbor/src/ui/appconfig"
 )
 
 // UserAPI handles request to /api/users/{}
@@ -48,9 +48,9 @@ type passwordReq struct {
 // Prepare validates the URL and parms
 func (ua *UserAPI) Prepare() {
 
-	ua.AuthMode = config.AuthMode()
+	ua.AuthMode = appconfig.AuthMode()
 
-	ua.SelfRegistration = config.SelfRegistration()
+	ua.SelfRegistration = appconfig.SelfRegistration()
 
 	if ua.Ctx.Input.IsPost() {
 		sessionUserID := ua.GetSession("userId")
@@ -237,7 +237,7 @@ func (ua *UserAPI) Delete() {
 		return
 	}
 
-	if config.AuthMode() == "ldap_auth" {
+	if appconfig.AuthMode() == "ldap_auth" {
 		ua.CustomAbort(http.StatusForbidden, "user can not be deleted in LDAP authentication mode")
 	}
 

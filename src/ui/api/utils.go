@@ -34,7 +34,7 @@ import (
 	"github.com/vmware/harbor/src/common/utils/log"
 	"github.com/vmware/harbor/src/common/utils/registry"
 	registry_error "github.com/vmware/harbor/src/common/utils/registry/error"
-	"github.com/vmware/harbor/src/ui/config"
+	"github.com/vmware/harbor/src/ui/appconfig"
 	"github.com/vmware/harbor/src/ui/service/cache"
 )
 
@@ -236,7 +236,7 @@ func addAuthentication(req *http.Request) {
 	if req != nil {
 		req.AddCookie(&http.Cookie{
 			Name:  models.UISecretCookie,
-			Value: config.UISecret(),
+			Value: appconfig.UISecret(),
 		})
 	}
 }
@@ -352,7 +352,7 @@ func diffRepos(reposInRegistry []string, reposInDB []string) ([]string, []string
 			}
 
 			// TODO remove the workaround when the bug of registry is fixed
-			endpoint := config.InternalRegistryURL()
+			endpoint := appconfig.InternalRegistryURL()
 			client, err := cache.NewRepositoryClient(endpoint, true,
 				"admin", repoInR, "repository", repoInR)
 			if err != nil {
@@ -374,7 +374,7 @@ func diffRepos(reposInRegistry []string, reposInDB []string) ([]string, []string
 			j++
 		} else {
 			// TODO remove the workaround when the bug of registry is fixed
-			endpoint := config.InternalRegistryURL()
+			endpoint := appconfig.InternalRegistryURL()
 			client, err := cache.NewRepositoryClient(endpoint, true,
 				"admin", repoInR, "repository", repoInR)
 			if err != nil {
@@ -424,7 +424,7 @@ func projectExists(repository string) (bool, error) {
 }
 
 func initRegistryClient() (r *registry.Registry, err error) {
-	endpoint := config.InternalRegistryURL()
+	endpoint := appconfig.InternalRegistryURL()
 
 	addr := endpoint
 	if strings.Contains(endpoint, "/") {
@@ -461,17 +461,17 @@ func initRegistryClient() (r *registry.Registry, err error) {
 }
 
 func buildReplicationURL() string {
-	url := config.InternalJobServiceURL()
+	url := appconfig.InternalJobServiceURL()
 	return fmt.Sprintf("%s/api/jobs/replication", url)
 }
 
 func buildJobLogURL(jobID string) string {
-	url := config.InternalJobServiceURL()
+	url := appconfig.InternalJobServiceURL()
 	return fmt.Sprintf("%s/api/jobs/replication/%s/log", url, jobID)
 }
 
 func buildReplicationActionURL() string {
-	url := config.InternalJobServiceURL()
+	url := appconfig.InternalJobServiceURL()
 	return fmt.Sprintf("%s/api/jobs/replication/actions", url)
 }
 

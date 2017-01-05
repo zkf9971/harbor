@@ -29,9 +29,9 @@ import (
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/mongo"
 	"github.com/vmware/harbor/src/ui/api"
+	"github.com/vmware/harbor/src/ui/appconfig"
 	_ "github.com/vmware/harbor/src/ui/auth/arrowcloud"
 	_ "github.com/vmware/harbor/src/ui/auth/db"
-	"github.com/vmware/harbor/src/ui/config"
 )
 
 const (
@@ -82,7 +82,7 @@ func main() {
 	//nothing but satisfies orm module
 	// orm.RegisterDataBase("default", "mysql", "root:root@tcp(mysql:3306)/registry")
 
-	if err := updateInitPassword(adminUserName, config.InitialAdminPassword()); err != nil {
+	if err := updateInitPassword(adminUserName, appconfig.InitialAdminPassword()); err != nil {
 		log.Error(err)
 	}
 	initRouters()

@@ -32,7 +32,7 @@ import (
 	"github.com/vmware/harbor/src/common/utils/registry"
 	"github.com/vmware/harbor/src/common/utils/registry/auth"
 	registry_error "github.com/vmware/harbor/src/common/utils/registry/error"
-	"github.com/vmware/harbor/src/ui/config"
+	"github.com/vmware/harbor/src/ui/appconfig"
 )
 
 // TargetAPI handles request to /api/targets/ping /api/targets/{}
@@ -43,7 +43,7 @@ type TargetAPI struct {
 
 // Prepare validates the user
 func (t *TargetAPI) Prepare() {
-	t.secretKey = config.SecretKey()
+	t.secretKey = appconfig.SecretKey()
 
 	userID := t.ValidateUser()
 	isSysAdmin, err := dao.IsAdminRole(userID)

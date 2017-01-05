@@ -1,0 +1,37 @@
+appname = registry_auth
+runmode = prod
+EXT_ENDPOINT = {{key "registry/external_auth_url"}}
+TOKEN_ENDPOINT = {{key "registry/internal_auth_url"}}
+VERIFY_REMOTE_CERT = {{key "registry/verify_remote_cert"}}
+LOG_LEVEL = {{key "registry/log_level"}}
+AUTH_MODE = {{key "registry/auth_mode"}}
+TOKEN_EXPIRATION = {{key "registry/token_expiration"}}
+HARBOR_ADMIN_PASSWORD = {{key "registry/admin_password"}}
+EXT_REG_URL = {{key "registry/external_registry_url"}}
+UI_SECRET = {{key "registry/ui_secret"}}
+SECRET_KEY = secretkey1234567
+SELF_REGISTRATION = {{key "registry/self_registration"}}
+PROJECT_CREATION_RESTRICTION = {{key "registry/project_creation_restriction"}}
+REGISTRY_URL = {{key "registry/internal_registry_url"}}
+JOB_SERVICE_URL = http://jobservice
+APP_ONLY = {{key "registry/app_only"}}
+APP_CHECK = {{key "registry/app_check"}}
+
+[lang]
+types = en-US|zh-CN
+names = en-US|zh-CN
+
+[dev]
+httpport = 80
+
+[prod]
+httpport = 9000
+
+[mail]
+identity = $email_identity
+host = $email_server
+port = $email_server_port
+username = $email_username
+password = $email_password
+from = $email_from
+ssl = $email_ssl

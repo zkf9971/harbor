@@ -24,10 +24,10 @@ import (
 	"gopkg.in/mgo.v2/bson"
 
 	"github.com/astaxie/beego/validation"
-	"github.com/vmware/harbor/src/common/config"
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/ui/appconfig"
 	"github.com/vmware/harbor/src/ui/auth"
 
 	"github.com/astaxie/beego"
@@ -218,5 +218,5 @@ func (b *BaseAPI) GetPaginationParams() (page, pageSize int64) {
 
 // GetIsInsecure ...
 func GetIsInsecure() bool {
-	return !config.VerifyRemoteCert()
+	return !appconfig.VerifyRemoteCert()
 }
