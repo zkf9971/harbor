@@ -24,6 +24,7 @@ import (
 
 	"github.com/astaxie/beego"
 	_ "github.com/astaxie/beego/session/redis"
+	"github.com/robfig/cron"
 
 	dao "github.com/vmware/harbor/src/common/daomongo"
 	"github.com/vmware/harbor/src/common/models"
@@ -35,9 +36,19 @@ import (
 )
 
 const (
-	adminUserID   = 1
+	adminUserID   = 1 //does not apply to mongo
 	adminUserName = "admin"
 )
+
+func init() {
+	c := cron.New()
+	c.AddFunc("@every 10m", func() {
+		if err := api.SyncRegistry(); err != nil {
+			log.Error(err)
+		}
+	})
+	c.Start()
+}
 
 func updateInitPassword(userID string, password string) error {
 	queryUser := models.User{Username: userID}
