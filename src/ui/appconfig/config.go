@@ -14,6 +14,31 @@ func init() {
 	}
 }
 
+// MongoHosts ...
+func MongoHosts() string {
+	return beego.AppConfig.String("MONGO_HOSTS")
+}
+
+// MongoPort ...
+func MongoPort() string {
+	return beego.AppConfig.String("MONGO_PORT")
+}
+
+// MongoRSName ...
+func MongoRSName() string {
+	return beego.AppConfig.String("MONGO_RSNAME")
+}
+
+// MongoUsername ...
+func MongoUsername() string {
+	return beego.AppConfig.String("MONGO_USERNAME")
+}
+
+// MongoPassword ...
+func MongoPassword() string {
+	return beego.AppConfig.String("MONGO_PASSWORD")
+}
+
 // VerifyRemoteCert returns bool value.
 func VerifyRemoteCert() bool {
 	val, err := beego.AppConfig.Bool("VERIFY_REMOTE_CERT")

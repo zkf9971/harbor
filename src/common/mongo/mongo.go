@@ -18,7 +18,7 @@ func FindOneDocument(collectionPrefixedWithDB string, query bson.M) (result bson
 
 	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
 
-	session := GetSession()
+	session := getSession(dBName)
 	defer session.Close()
 
 	result = bson.M{}
@@ -40,7 +40,7 @@ func GetQuery(collectionPrefixedWithDB string, query bson.M, sort []string, pagi
 
 	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
 
-	session = GetSession()
+	session = getSession(dBName)
 
 	c := session.DB(dBName).C(collectionName)
 	q = c.Find(query)
@@ -225,7 +225,7 @@ func FindAndModifyDocument(collectionPrefixedWithDB string, query bson.M, change
 	log.Debugf("Query: %v", query)
 	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
 
-	session := GetSession()
+	session := getSession(dBName)
 	defer session.Close()
 
 	c := session.DB(dBName).C(collectionName)
@@ -271,7 +271,7 @@ func UpsertDocument(collectionPrefixedWithDB string, query, update interface{}) 
 
 	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
 
-	session := GetSession()
+	session := getSession(dBName)
 	defer session.Close()
 
 	change := mgo.Change{
@@ -300,7 +300,7 @@ func UpsertUser(collectionPrefixedWithDB string, query, update interface{}) (res
 
 	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
 
-	session := GetSession()
+	session := getSession(dBName)
 	defer session.Close()
 
 	change := mgo.Change{
@@ -330,7 +330,7 @@ func RemoveDocument(collectionPrefixedWithDB string, query bson.M) (err error) {
 
 	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
 
-	session := GetSession()
+	session := getSession(dBName)
 	defer session.Close()
 
 	c := session.DB(dBName).C(collectionName)
@@ -349,7 +349,7 @@ func InsertDocument(collectionPrefixedWithDB string, doc interface{}) (err error
 	log.Debugf("Insert: %v, %v", collectionPrefixedWithDB, doc)
 	dBName, collectionName := getDBAndCollectionName(collectionPrefixedWithDB)
 
-	session := GetSession()
+	session := getSession(dBName)
 	defer session.Close()
 
 	c := session.DB(dBName).C(collectionName)
@@ -360,4 +360,11 @@ func InsertDocument(collectionPrefixedWithDB string, doc interface{}) (err error
 		log.Errorf("insert err: %v", err)
 	}
 	return
+}
+
+func getSession(dbName string) *mgo.Session {
+	if dbName == "arrowcloud" {
+		return GetArrowCloudDBSession()
+	}
+	return GetSession()
 }

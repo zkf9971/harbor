@@ -5,24 +5,37 @@ import (
 	"strings"
 
 	"github.com/vmware/harbor/src/common/utils/log"
+	"github.com/vmware/harbor/src/ui/appconfig"
 	"gopkg.in/mgo.v2"
 )
 
-var session *mgo.Session
+var registryAuthDBSession *mgo.Session
+var arrowcloudDBSession *mgo.Session
 
+//InitDatabase initializes connection to mongo db
 func InitDatabase() {
+
 	dbOpts := map[string]string{
-		"hostname": "192.168.99.100",
-		"port":     "27017",
+		"hostname": appconfig.MongoHosts(),
+		"port":     appconfig.MongoPort(),
+		"rsname":   appconfig.MongoRSName(),
+		"username": appconfig.MongoUsername(),
+		"password": appconfig.MongoPassword(),
 		"dbname":   "registry_auth",
 	}
-	err := connectDB(dbOpts)
+	var err error
+	registryAuthDBSession, err = connectDB(dbOpts)
+	if err != nil {
+		panic(err)
+	}
+	dbOpts["dbname"] = "arrowcloud"
+	arrowcloudDBSession, err = connectDB(dbOpts)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func connectDB(options map[string]string) (err error) {
+func connectDB(options map[string]string) (session *mgo.Session, err error) {
 
 	hostname := options["hostname"]
 	port := options["port"]
@@ -66,7 +79,7 @@ func connectDB(options map[string]string) (err error) {
 
 	if err != nil {
 		log.Errorf("Failed to create mongo session. %v", err)
-		return err
+		return nil, err
 	}
 	// defer session.Close()
 
@@ -83,9 +96,15 @@ func connectDB(options map[string]string) (err error) {
 	}
 	session.SetPoolLimit(int(intNumConn))
 
-	return nil
+	return session, nil
 }
 
+//GetSession returns a registry_auth db session copy
 func GetSession() *mgo.Session {
-	return session.Copy()
+	return registryAuthDBSession.Copy()
+}
+
+//GetArrowCloudDBSession returns a arrowcloud db session copy
+func GetArrowCloudDBSession() *mgo.Session {
+	return arrowcloudDBSession.Copy()
 }

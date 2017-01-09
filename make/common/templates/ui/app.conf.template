@@ -1,5 +1,11 @@
 appname = registry_auth
 runmode = prod
+
+MONGO_HOSTS = mongo-primary,mongo-secondary
+MONGO_PORT = 27017
+MONGO_RSNAME = data
+MONGO_USERNAME = appcelerator
+MONGO_PASSWORD = {{key "global/mongodb_password"}}
 EXT_ENDPOINT = {{key "registry/external_auth_url"}}
 TOKEN_ENDPOINT = {{key "registry/internal_auth_url"}}
 VERIFY_REMOTE_CERT = {{key "registry/verify_remote_cert"}}
@@ -8,7 +14,7 @@ AUTH_MODE = {{key "registry/auth_mode"}}
 TOKEN_EXPIRATION = {{key "registry/token_expiration"}}
 HARBOR_ADMIN_PASSWORD = {{key "registry/admin_password"}}
 EXT_REG_URL = {{key "registry/external_registry_url"}}
-UI_SECRET = {{key "registry/ui_secret"}}
+UI_SECRET = {{key "registry/auth_secret"}}
 SECRET_KEY = secretkey1234567
 SELF_REGISTRATION = {{key "registry/self_registration"}}
 PROJECT_CREATION_RESTRICTION = {{key "registry/project_creation_restriction"}}
