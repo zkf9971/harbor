@@ -6,8 +6,8 @@ RUN tdnf install -y sed apr-util-ldap unzip
 # Add Consul template
 # Releases at https://releases.hashicorp.com/consul-template/
 
-ENV CONSUL_TEMPLATE_VERSION 0.14.0
-ENV CONSUL_TEMPLATE_SHA1 7c70ea5f230a70c809333e75fdcff2f6f1e838f29cfb872e1420a63cdf7f3a78
+ENV CONSUL_TEMPLATE_VERSION 0.18.0-rc1
+ENV CONSUL_TEMPLATE_SHA1 a46d00d71c907c3c40af2b23b89c378debc806084d3b4b60f4161c0988edefb1
 
 RUN curl --retry 7 -Lso /tmp/consul-template.zip "https://releases.hashicorp.com/consul-template/${CONSUL_TEMPLATE_VERSION}/consul-template_${CONSUL_TEMPLATE_VERSION}_linux_amd64.zip" \
     && echo "${CONSUL_TEMPLATE_SHA1}  /tmp/consul-template.zip" | sha256sum -c \
@@ -25,6 +25,7 @@ COPY ./make/jsminify.sh /tmp/jsminify.sh
 
 COPY ./make/common/templates/ui/app.conf.template /etc/ui/app.conf.template
 COPY ./make/common/templates/ui/private_key.pem /etc/ui/private_key.pem
+COPY ./make/common/templates/ui/root.crt /etc/ui/root.crt
 COPY ./make/common/templates/ui/start-with-consul.sh /usr/local/bin
 
 RUN chmod u+x /harbor/harbor_ui \

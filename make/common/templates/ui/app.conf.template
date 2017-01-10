@@ -32,6 +32,10 @@ httpport = 80
 
 [prod]
 httpport = 9000
+EnableHTTPS = {{keyOrDefault "registry/auth_https" "false"}}
+HTTPSCertFile = /etc/ui/https/server.crt
+HTTPSKeyFile = /etc/ui/https/server.key
+HTTPSPort = 443
 
 [mail]
 identity = $email_identity
