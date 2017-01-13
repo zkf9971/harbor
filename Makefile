@@ -75,7 +75,7 @@ SRCPATH=./src
 TOOLSPATH=$(BUILDPATH)/tools
 GOBASEPATH=/go/src/github.com/vmware
 CHECKENVCMD=checkenv.sh
-BASEIMAGE=photon
+BASEIMAGE=alpine
 COMPILETAG=compile_normal
 REGISTRYSERVER=
 REGISTRYPROJECTNAME=vmware
@@ -129,6 +129,7 @@ CONFIGFILE=harbor.cfg
 # makefile
 MAKEFILEPATH_PHOTON=$(MAKEPATH)/photon
 MAKEFILEPATH_UBUNTU=$(MAKEPATH)/ubuntu
+MAKEFILEPATH_ALPINE=$(MAKEPATH)/alpine
 
 # common dockerfile
 DOCKERFILEPATH_COMMON=$(MAKEPATH)/common
@@ -228,6 +229,9 @@ build_photon:
 build_ubuntu:
 	make -f $(MAKEFILEPATH_UBUNTU)/Makefile build -e DEVFLAG=$(DEVFLAG)
 	
+build_alpine: 
+	make -f $(MAKEFILEPATH_ALPINE)/Makefile build -e DEVFLAG=$(DEVFLAG)
+
 build: build_$(BASEIMAGE)
 	
 modify_composefile: 

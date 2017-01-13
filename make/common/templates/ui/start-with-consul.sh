@@ -1,15 +1,6 @@
 echo "checking $CONSUL:8500..."
 
-wait_for_port() {
-    local HOST=$1
-    local PORT=$2
-    while ! timeout --preserve-status 2 bash -c "</dev/tcp/${HOST}/${PORT}"; do
-        echo "wait for 3 more seconds for ${HOST}:${PORT} to be ready...";
-        sleep 3;
-    done
-}
-
-wait_for_port $CONSUL 8500
+while ! echo exit | nc $CONSUL 8500; do echo "wait for 3 more seconds...";sleep 3; done
 
 consul-template \
     -log-level debug \
