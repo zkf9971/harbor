@@ -88,24 +88,24 @@ func (b *BaseAPI) DecodeJSONReqAndValidate(v interface{}) {
 
 // ValidateUser checks if the request triggered by a valid user
 func (b *BaseAPI) ValidateUser() models.User {
-	userID, needsCheck, ok := b.GetUserIDForRequest()
+	userID, _, ok := b.GetUserIDForRequest()
 	if !ok {
 		log.Warning("No user id in session, canceling request")
 		b.CustomAbort(http.StatusUnauthorized, "")
 	}
 	var user *models.User
 	var err error
-	if needsCheck {
-		user, err = dao.GetUser(models.User{UserID: userID})
-		if err != nil {
-			log.Errorf("Error occurred in GetUser, error: %v", err)
-			b.CustomAbort(http.StatusInternalServerError, "Internal error.")
-		}
-		if user == nil {
-			log.Warningf("User was deleted already, user id: %v, canceling request.", userID)
-			b.CustomAbort(http.StatusUnauthorized, "")
-		}
+	// if needsCheck {
+	user, err = dao.GetUser(models.User{UserID: userID})
+	if err != nil {
+		log.Errorf("Error occurred in GetUser, error: %v", err)
+		b.CustomAbort(http.StatusInternalServerError, "Internal error.")
 	}
+	if user == nil {
+		log.Warningf("User was deleted already, user id: %v, canceling request.", userID)
+		b.CustomAbort(http.StatusUnauthorized, "")
+	}
+	// }
 	return *user
 }
 
