@@ -38,7 +38,6 @@ func InitDatabase() {
 func connectDB(options map[string]string) (session *mgo.Session, err error) {
 
 	hostname := options["hostname"]
-	port := options["port"]
 	rsname := options["rsname"]
 	dbname := options["dbname"]
 	numConn := options["poolsize"]
@@ -58,7 +57,7 @@ func connectDB(options map[string]string) (session *mgo.Session, err error) {
 			if i > 0 {
 				urlServers += ","
 			}
-			urlServers += (host + ":" + port)
+			urlServers += host
 		}
 		url += urlServers
 		url += ("/" + dbname)
@@ -68,7 +67,7 @@ func connectDB(options map[string]string) (session *mgo.Session, err error) {
 
 	} else {
 		// This is normal single mongodb
-		urlServers = hostname + ":" + port
+		urlServers = hostname 
 		url += urlServers
 		// url += ("/" + dbname)
 	}
