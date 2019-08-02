@@ -75,7 +75,7 @@ func connectDB(options map[string]string) (session *mgo.Session, err error) {
 	// filter out the MongoDB secrets
 	result := strings.Split(url, "@")
 	if len(result) > 1 {
-		log.Debugf("Mongo URL: %s", "mongodb://??:??" + result[1])
+		log.Debugf("Mongo URL: %s", "mongodb://??:??@" + result[1])
 	} else {
 		log.Debugf("Mongo URL: %s", result[0])
 	}
